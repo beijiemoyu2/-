@@ -1,0 +1,2 @@
+split_game是前端文件夹：index是启动文件，settings文件夹是设置文件夹，quiz文件夹是答题文件夹，levels文件夹是关卡文件夹，leaderboard文件夹是排行榜文件夹。
+split_game_backend是后端文件夹：里面是后端的启动文件
