@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>积分排行榜</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #leaderboardContainer {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            width: 80%;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #0984e3;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-to-menu-btn {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-to-menu-btn:hover {
+            background-color: #d32f2f;
+            transform: scale(1.05);
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .leaderboard-table th {
+            background-color: #0984e3;
+            color: white;
+            font-weight: bold;
+        }
+
+        .leaderboard-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .leaderboard-table tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        .rank-medal {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+        }
+
+        .rank-1 {
+            background-color: #FFD700; /* 金牌 */
+        }
+
+        .rank-2 {
+            background-color: #C0C0C0; /* 银牌 */
+        }
+
+        .rank-3 {
+            background-color: #CD7F32; /* 铜牌 */
+        }
+
+        .rank-other {
+            background-color: #0984e3;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background-color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .tab.active {
+            background-color: #0984e3;
+            color: white;
+        }
+
+        .tab:first-child {
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+        }
+
+        .tab:last-child {
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0984e3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #f44336;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="leaderboardContainer">
+        <div class="leaderboard-header">
+            <h1>积分排行榜</h1>
+            <button class="back-to-menu-btn" id="backToMenuBtn">返回大厅</button>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="total">总积分排行榜</div>
+            <div class="tab" data-tab="daily">今日积分排行榜</div>
+        </div>
+        
+        <div id="leaderboardContent">
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载排行榜...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入后端API模块 -->
+    <script src="../js/api.js"></script>
+    <script>
+        // 当前激活的标签页
+        let activeTab = 'total';
+        
+        // DOM元素
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+        const leaderboardContent = document.getElementById('leaderboardContent');
+        const tabs = document.querySelectorAll('.tab');
+        
+        // 初始化
+        function init() {
+            // 绑定事件
+            backToMenuBtn.addEventListener('click', () => {
+                window.location.href = '../index.html';
+            });
+            
+            // 绑定标签页切换事件
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 更新激活状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // 切换标签页
+                    activeTab = tab.dataset.tab;
+                    loadLeaderboard();
+                });
+            });
+            
+            // 加载排行榜
+            loadLeaderboard();
+        }
+        
+        // 显示加载状态
+        function showLoading() {
+            leaderboardContent.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载排行榜...</p>
+                </div>
+            `;
+        }
+        
+        // 显示错误信息
+        function showError(message) {
+            leaderboardContent.innerHTML = `
+                <div class="error-message">
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+        
+        // 加载排行榜数据
+        async function loadLeaderboard() {
+            showLoading();
+            
+            try {
+                let leaderboardData;
+                
+                // 根据当前标签页加载不同数据
+                if (activeTab === 'total') {
+                    leaderboardData = await BackendAPI.getLeaderboard(10);
+                } else {
+                    leaderboardData = await BackendAPI.getDailyLeaderboard(10);
+                }
+                
+                // 显示排行榜
+                displayLeaderboard(leaderboardData);
+            } catch (error) {
+                console.error('加载排行榜失败:', error);
+                showError('加载排行榜失败，请稍后重试');
+            }
+        }
+        
+        // 显示排行榜
+        function displayLeaderboard(data) {
+            if (!data || data.length === 0) {
+                leaderboardContent.innerHTML = '<div class="error-message"><p>暂无排行榜数据</p></div>';
+                return;
+            }
+            
+            let tableHTML = `
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>用户</th>
+            `;
+            
+            // 根据标签页类型显示不同列
+            if (activeTab === 'total') {
+                tableHTML += `
+                    <th>总积分</th>
+                    <th>等级</th>
+                    <th>徽章</th>
+                `;
+            } else {
+                tableHTML += `<th>今日积分</th>`;
+            }
+            
+            tableHTML += `
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // 生成排行榜行
+            data.forEach((item, index) => {
+                // 确定排名徽章样式
+                let rankMedalClass = 'rank-other';
+                if (index === 0) rankMedalClass = 'rank-1';
+                if (index === 1) rankMedalClass = 'rank-2';
+                if (index === 2) rankMedalClass = 'rank-3';
+                
+                tableHTML += `
+                    <tr>
+                        <td>
+                            <span class="rank-medal ${rankMedalClass}">
+                                ${index + 1}
+                            </span>
+                        </td>
+                        <td>用户${item.userId}</td>
+                `;
+                
+                // 根据标签页类型显示不同数据
+                if (activeTab === 'total') {
+                    tableHTML += `
+                        <td>${item.totalPoints}</td>
+                        <td>${item.level}</td>
+                        <td>${item.badges ? item.badges.map(b => getBadgeName(b)).join(', ') : '无'}</td>
+                    `;
+                } else {
+                    tableHTML += `<td>${item.todayPoints}</td>`;
+                }
+                
+                tableHTML += `</tr>`;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            leaderboardContent.innerHTML = tableHTML;
+        }
+        
+        // 获取徽章名称
+        function getBadgeName(badgeId) {
+            const badgeNames = {
+                'beginner': '环保新手',
+                'scholar': '环保学者',
+                'expert': '环保专家'
+            };
+            return badgeNames[badgeId] || badgeId;
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
