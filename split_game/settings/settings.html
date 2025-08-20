@@ -1,1 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #settingsContainer {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            width: 80%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #0984e3;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .setting-group {
+            margin-bottom: 25px;
+        }
+
+        .setting-group h2 {
+            color: #0984e3;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .volume-control input[type="range"] {
+            flex: 1;
+            height: 10px;
+            -webkit-appearance: none;
+            appearance: none; /* 添加标准属性以提高兼容性 */
+            background: #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .volume-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none; /* 添加标准属性以提高兼容性 */
+            width: 25px;
+            height: 25px;
+            background: #0984e3;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .volume-value {
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #0984e3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-label {
+            font-weight: bold;
+        }
+
+        #saveSettingsBtn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            background-color: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #saveSettingsBtn:hover {
+            background-color: #0770c4;
+        }
+
+        .back-to-menu-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-to-menu-btn:hover {
+            background-color: #d32f2f;
+            transform: scale(1.05);
+        }
+
+        .connection-status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .connection-success {
+            background-color: #e8f5e9;
+            color: #4CAF50;
+        }
+
+        .connection-error {
+            background-color: #ffebee;
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-to-menu-btn" id="backToMenuBtn">返回主菜单</button>
+    
+    <div id="settingsContainer">
+        <h1>游戏设置</h1>
+        
+        <div class="setting-group">
+            <h2>音乐音量</h2>
+            <div class="volume-control">
+                <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                <span class="volume-value" id="volumeValue">50%</span>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h2>学习模式</h2>
+            <div class="toggle-container">
+                <span class="toggle-label">启用学习模式:</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="learningModeToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h2>连接状态</h2>
+            <div id="connectionStatus" class="connection-status">
+                检查连接中...
+            </div>
+        </div>
+        
+        <button id="saveSettingsBtn">保存设置</button>
+    </div>
+
+    <!-- 引入后端API模块 -->
+    <script src="../js/api.js"></script>
+    <script>
+        // 初始化
+        function init() {
+            // 绑定事件
+            document.getElementById('backToMenuBtn').addEventListener('click', () => {
+                window.location.href = '../index.html';
+            });
+            
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+            
+            // 初始化音量显示
+            updateVolumeValue();
+            
+            // 绑定音量滑块事件
+            document.getElementById('volumeSlider').addEventListener('input', updateVolumeValue);
+            
+            // 检查后端连接状态
+            checkBackendConnection();
+            
+            // 页面加载时恢复设置
+            loadSettings();
+        }
+
+        // 更新音量显示
+        function updateVolumeValue() {
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeValue = document.getElementById('volumeValue');
+            if (volumeSlider && volumeValue) {
+                volumeValue.textContent = volumeSlider.value + '%';
+            }
+        }
+
+        // 保存设置
+        function saveSettings() {
+            const volumeSlider = document.getElementById('volumeSlider');
+            const learningModeToggle = document.getElementById('learningModeToggle');
+            
+            // 保存设置到localStorage
+            const settings = {
+                volume: volumeSlider.value,
+                learningMode: learningModeToggle.checked
+            };
+            
+            localStorage.setItem('envGameSettings', JSON.stringify(settings));
+            
+            // 显示保存成功的提示
+            const originalText = document.getElementById('saveSettingsBtn').textContent;
+            document.getElementById('saveSettingsBtn').textContent = '设置已保存';
+            
+            setTimeout(() => {
+                document.getElementById('saveSettingsBtn').textContent = originalText;
+            }, 2000);
+        }
+
+        // 加载设置
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('envGameSettings');
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    document.getElementById('volumeSlider').value = settings.volume || 50;
+                    document.getElementById('learningModeToggle').checked = settings.learningMode || false;
+                    updateVolumeValue();
+                } catch (e) {
+                    console.error('加载设置失败:', e);
+                }
+            }
+        }
+
+        // 检查后端连接状态
+        async function checkBackendConnection() {
+            const connectionStatus = document.getElementById('connectionStatus');
+            try {
+                const isConnected = await BackendAPI.testConnection();
+                if (isConnected) {
+                    connectionStatus.textContent = '连接成功';
+                    connectionStatus.className = 'connection-status connection-success';
+                } else {
+                    connectionStatus.textContent = '连接失败';
+                    connectionStatus.className = 'connection-status connection-error';
+                }
+            } catch (error) {
+                console.error('连接检查失败:', error);
+                connectionStatus.textContent = '连接失败: ' + error.message;
+                connectionStatus.className = 'connection-status connection-error';
+            }
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
