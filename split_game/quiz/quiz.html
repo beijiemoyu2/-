@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环保知识问答</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(rgba(46, 125, 50, 0.9), rgba(27, 94, 32, 0.95));
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #quizContainer {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        #quizSetup {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+        }
+
+        #quizSetup label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        #questionCount {
+            padding: 5px;
+            margin-right: 15px;
+        }
+
+        #startQuizBtn {
+            padding: 5px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #quizInfo {
+            display: none;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+        }
+
+        #questionContainer {
+            display: none;
+        }
+
+        .question h3 {
+            margin-bottom: 15px;
+        }
+
+        .options div {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f1f8e9;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .options div:hover {
+            background-color: #c8e6c9;
+        }
+
+        .options div.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .submit {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 15px 0;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .nav-btn {
+            padding: 5px 15px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #quizResult {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .correct {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .incorrect {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .back-to-menu-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .back-to-menu-btn:hover {
+            background-color: #d32f2f;
+            transform: scale(1.05);
+        }
+
+        /* 学习模式样式 */
+        #learningMode {
+            display: none;
+        }
+
+        #learningMode h2 {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #subjectSelection {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .subject-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .subject-btn:hover, .subject-btn.active {
+            background-color: #0b7dda;
+        }
+
+        #knowledgeList {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .knowledge-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .knowledge-item:last-child {
+            border-bottom: none;
+        }
+
+        .knowledge-item h4 {
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        #learningNav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        #learningNav button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #learningNav button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* 用户认证样式 */
+        #authContainer {
+            display: none;
+            background-color: #e8f5e9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        #authContainer h2 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .auth-form input {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 16px;
+        }
+
+        .auth-form button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .auth-form button:hover {
+            background-color: #45a049;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 15px;
+            color: #2196F3;
+            cursor: pointer;
+        }
+
+        .error-message {
+            color: #f44336;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e8f5e9;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-to-menu-btn" id="backToMenuBtn">返回主菜单</button>
+    
+    <div id="quizContainer">
+        <h1>环保知识问答</h1>
+        
+        <!-- 用户认证区域 -->
+        <div id="authContainer">
+            <!-- 登录表单 -->
+            <div id="loginForm">
+                <h2>用户登录</h2>
+                <div class="error-message" id="loginError"></div>
+                <form class="auth-form">
+                    <input type="email" id="loginEmail" placeholder="请输入邮箱地址" required>
+                    <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                    <button type="button" id="loginBtn">登录</button>
+                </form>
+                <div class="auth-toggle" id="showRegister">还没有账号？点击注册</div>
+            </div>
+            
+            <!-- 注册表单 -->
+            <div id="registerForm" style="display: none;">
+                <h2>用户注册</h2>
+                <div class="error-message" id="registerError"></div>
+                <form class="auth-form">
+                    <input type="text" id="registerName" placeholder="请输入用户名" required>
+                    <input type="email" id="registerEmail" placeholder="请输入邮箱地址" required>
+                    <input type="password" id="registerPassword" placeholder="请输入密码" required>
+                    <input type="password" id="registerConfirmPassword" placeholder="请确认密码" required>
+                    <button type="button" id="registerBtn">注册</button>
+                </form>
+                <div class="auth-toggle" id="showLogin">已有账号？点击登录</div>
+            </div>
+        </div>
+        
+        <!-- 用户信息显示 -->
+        <div id="userInfo" class="user-info" style="display: none;">
+            <div>欢迎, <span id="userName"></span>!</div>
+            <button class="logout-btn" id="logoutBtn">退出登录</button>
+        </div>
+        
+        <div id="quizSetup">
+            <label for="questionCount">选择答题数量：</label>
+            <select id="questionCount">
+                <option value="5">5题</option>
+                <option value="10" selected>10题</option>
+                <option value="20">20题</option>
+                <option value="0">全部题目</option>
+            </select>
+            <button id="startQuizBtn">开始答题</button>
+        </div>
+        
+        <div id="quizInfo">
+            <div>当前积分: <span id="currentScore">0</span></div>
+            <div>今日积分: <span id="dailyScore">0</span>/20</div>
+            <div>答题进度: <span id="quizProgress"></span></div>
+        </div>
+        
+        <div id="questionContainer">
+            <div class="question">
+                <h3 id="questionText"></h3>
+                <div class="options" id="optionsContainer">
+                    <!-- 选项将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            <button id="submitAnswerBtn" class="submit">提交答案</button>
+            <div class="navigation">
+                <button id="prevQuestionBtn" class="nav-btn">上一题</button>
+                <button id="nextQuestionBtn" class="nav-btn">下一题</button>
+            </div>
+        </div>
+        
+        <div id="quizResult"></div>
+        
+        <!-- 学习模式 -->
+        <div id="learningMode">
+            <h2>知识学习模式</h2>
+            <div id="subjectSelection">
+                <p>请选择学习主题：</p>
+                <button class="subject-btn" data-subject="environment">环保知识</button>
+                <button class="subject-btn" data-subject="sports">运动知识</button>
+                <button class="subject-btn" data-subject="health">健康知识</button>
+            </div>
+            
+            <div id="knowledgeList"></div>
+            
+            <div id="learningNav">
+                <button id="prevPageBtn">上一页</button>
+                <span id="pageInfo">第 <span id="currentPage">1</span> 页，共 <span id="totalPages">1</span> 页</span>
+                <button id="nextPageBtn">下一页</button>
+            </div>
+            
+            <button id="backToQuizBtn" style="display: block; margin: 20px auto; padding: 10px 20px; background-color: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">返回问答模式</button>
+        </div>
+    </div>
+
+    <script>
+        // 题库数据
+        const quizQuestions = [
+            {
+                question: "以下哪种行为最有利于减少碳排放？",
+                options: ["开车上班", "乘坐地铁", "乘坐飞机", "开大排量汽车"],
+                correctAnswer: 1,
+                explanation: "地铁是公共交通工具，人均碳排放远低于私家车，是低碳出行的好选择。"
+            },
+            {
+                question: "以下哪种垃圾属于可回收物？",
+                options: ["废电池", "剩饭剩菜", "废纸箱", "过期药品"],
+                correctAnswer: 2,
+                explanation: "废纸箱属于可回收物，可以重新加工利用。废电池和过期药品属于有害垃圾，剩饭剩菜属于厨余垃圾。"
+            },
+            {
+                question: "以下哪种做法最有利于节能减排？",
+                options: ["长时间开空调", "使用节能灯泡", "频繁开关电器", "让电器待机状态"],
+                correctAnswer: 1,
+                explanation: "使用节能灯泡比普通白炽灯节能80%以上，且寿命更长，是节能减排的有效方法。"
+            },
+            {
+                question: "以下哪种出行方式最环保？",
+                options: ["私家车出行", "乘坐飞机", "骑自行车", "乘坐出租车"],
+                correctAnswer: 2,
+                explanation: "骑自行车是零排放的出行方式，既环保又健康，是最环保的出行方式之一。"
+            },
+            {
+                question: "以下哪种行为有助于节约水资源？",
+                options: ["洗澡时一直开水", "刷牙时关闭水龙头", "洗车时用自来水冲洗", "让水龙头一直滴水"],
+                correctAnswer: 1,
+                explanation: "刷牙时关闭水龙头可以节约大量水资源，养成良好的节水习惯对保护水资源非常重要。"
+            },
+            {
+                question: "以下哪种材料最难降解？",
+                options: ["纸张", "塑料", "木头", "棉布"],
+                correctAnswer: 1,
+                explanation: "塑料需要几百年甚至更长时间才能完全降解，对环境造成长期污染，是白色污染的主要来源。"
+            },
+            {
+                question: "以下哪种行为有助于减少空气污染？",
+                options: ["焚烧垃圾", "多植树造林", "大量使用汽车", "工厂直接排放废气"],
+                correctAnswer: 1,
+                explanation: "植树造林可以吸收二氧化碳，释放氧气，有效改善空气质量，是减少空气污染的重要方法。"
+            },
+            {
+                question: "以下哪种做法最有利于保护森林资源？",
+                options: ["大量砍伐树木", "使用一次性筷子", "节约用纸", "随意破坏植被"],
+                correctAnswer: 2,
+                explanation: "节约用纸可以减少对森林的砍伐需求，保护森林资源，维护生态平衡。"
+            },
+            {
+                question: "以下哪种行为有助于减少噪音污染？",
+                options: ["在公共场所大声喧哗", "深夜施工", "轻声细语", "高声播放音乐"],
+                correctAnswer: 2,
+                explanation: "轻声细语可以减少噪音产生，营造安静舒适的环境，有利于身心健康。"
+            },
+            {
+                question: "以下哪种做法最有利于保护生物多样性？",
+                options: ["破坏野生动物栖息地", "捕杀珍稀动物", "建立自然保护区", "大量使用农药"],
+                correctAnswer: 2,
+                explanation: "建立自然保护区可以为野生动物提供安全的栖息环境，有效保护生物多样性。"
+            }
+        ];
+
+        // 知识库数据
+        const knowledgeBase = {
+            environment: [
+                // 环保知识 (50条)
+                { title: "什么是碳足迹", content: "碳足迹是指个人、组织或产品在日常活动中直接或间接产生的温室气体排放总量，通常以二氧化碳当量来衡量。" },
+                { title: "温室效应", content: "温室效应是指大气中的温室气体（如二氧化碳、甲烷等）吸收地球表面辐射的热量，导致全球气温上升的现象。" },
+                { title: "可再生能源", content: "可再生能源是指在自然界中可以不断再生、永续利用的能源，如太阳能、风能、水能、生物质能等。" },
+                { title: "酸雨的形成", content: "酸雨是由于大气中的二氧化硫和氮氧化物与水蒸气反应形成的酸性降水，对环境和建筑物有腐蚀作用。" },
+                { title: "生物多样性", content: "生物多样性是指在特定环境中生物种类的多样性、遗传多样性和生态系统多样性的总和。" },
+                { title: "生态平衡", content: "生态平衡是指生态系统中各种生物之间以及生物与环境之间达到相对稳定的动态平衡状态。" },
+                { title: "可持续发展", content: "可持续发展是指满足当代人的需求，同时不损害后代人满足其需求能力的发展模式。" },
+                { title: "循环经济", content: "循环经济是一种以资源的高效利用和循环利用为核心，以减量化、再利用、资源化为原则的经济发展模式。" },
+                { title: "绿色消费", content: "绿色消费是指消费者在购买和使用商品过程中，关注商品对环境的影响，优先选择环保产品的消费行为。" },
+                { title: "碳中和", content: "碳中和是指在一定时期内，通过植树造林、节能减排等形式，抵消自身产生的二氧化碳排放量，实现二氧化碳'零排放'。" },
+                { title: "PM2.5", content: "PM2.5是指大气中直径小于或等于2.5微米的颗粒物，也称为细颗粒物，对人体健康和大气环境质量有重要影响。" },
+                { title: "臭氧层空洞", content: "臭氧层空洞是指南极上空平流层臭氧浓度显著减少的现象，主要由氯氟碳化合物等物质破坏臭氧分子造成。" },
+                { title: "厄尔尼诺现象", content: "厄尔尼诺现象是指赤道太平洋中东部海域海水温度异常升高的现象，会对全球气候产生重要影响。" },
+                { title: "拉尼娜现象", content: "拉尼娜现象是指赤道太平洋中东部海域海水温度异常降低的现象，通常与厄尔尼诺现象交替出现。" },
+                { title: "全球变暖", content: "全球变暖是指由于人类活动导致大气中温室气体浓度增加，从而引起全球平均气温持续上升的现象。" },
+                { title: "节能减排", content: "节能减排是指节约能源和减少污染物排放，是应对气候变化和保护环境的重要措施。" },
+                { title: "低碳生活", content: "低碳生活是指通过减少日常生活中的能源消耗，降低二氧化碳等温室气体排放的生活方式。" },
+                { title: "垃圾分类", content: "垃圾分类是指按照垃圾的成分、属性、利用价值以及对环境的影响，将其分为不同类别，以便进行回收利用和处理处置。" },
+                { title: "白色污染", content: "白色污染是指塑料废弃物对环境造成的污染，特别是塑料袋、塑料餐具等一次性塑料制品造成的环境问题。" },
+                { title: "绿色建筑", content: "绿色建筑是指在建筑的全生命周期内，最大限度地节约资源、保护环境和减少污染，为人们提供健康、适用和高效的使用空间。" },
+                { title: "生态农业", content: "生态农业是指按照生态学原理和经济学原理，运用现代科学技术成果和现代管理手段，以及传统农业的有效经验建立起来的农业体系。" },
+                { title: "有机食品", content: "有机食品是指来自于有机农业生产体系，根据有机农业生产要求和相应标准生产加工，并通过独立的有机食品认证机构认证的一切农副产品。" },
+                { title: "转基因食品", content: "转基因食品是指利用基因工程技术改变基因组构成的动物、植物和微生物所制造的食品。" },
+                { title: "食品安全", content: "食品安全是指食品无毒、无害，符合应当有的营养要求，对人体健康不造成任何急性、亚急性或者慢性危害。" },
+                { title: "食品安全标准", content: "食品安全标准是指为保证食品安全、维护公众身体健康而制定的食品中各种有害物质的限量标准。" },
+                { title: "食品添加剂", content: "食品添加剂是指为改善食品品质和色、香、味以及为防腐、保鲜和加工工艺的需要而加入食品中的人工合成或者天然物质。" },
+                { title: "绿色食品", content: "绿色食品是指产自优良生态环境、按照绿色食品标准生产、实行全程质量控制并获得绿色食品标志使用权的安全、优质食用农产品及相关产品。" },
+                { title: "无公害食品", content: "无公害食品是指产地环境、生产过程和产品质量符合国家有关标准和规范的要求，经认证合格获得认证证书并允许使用无公害农产品标志的未经加工或者初加工的食用农产品。" },
+                { title: "食品安全风险评估", content: "食品安全风险评估是指对食品、食品添加剂中生物性、化学性和物理性危害对人体健康可能造成的不良影响所进行的科学评估。" },
+                { title: "食品安全监管", content: "食品安全监管是指政府有关部门依法对食品生产经营活动进行监督管理，确保食品安全的行政行为。" },
+                { title: "食品安全事故", content: "食品安全事故是指食物中毒、食源性疾病、食品污染等源于食品，对人体健康有危害或者可能有危害的事故。" },
+                { title: "食品安全追溯", content: "食品安全追溯是指能够追踪食品从生产、加工、流通到消费全过程的信息记录和查询系统。" },
+                { title: "食品安全信用体系", content: "食品安全信用体系是指通过记录和评价食品生产经营者的信用状况，实施信用监管和奖惩措施的制度安排。" },
+                { title: "食品安全科普", content: "食品安全科普是指通过各种途径和方式向公众普及食品安全科学知识，提高公众食品安全意识和科学素养。" },
+                { title: "食品安全举报", content: "食品安全举报是指公众向有关部门报告食品安全违法行为，以维护食品安全和公众健康的行为。" },
+                { title: "食品安全法律责任", content: "食品安全法律责任是指食品生产经营者违反食品安全法律法规应当承担的法律后果。" },
+                { title: "食品安全标准体系", content: "食品安全标准体系是指由国家标准、行业标准、地方标准和企业标准构成的统一、协调的食品安全标准框架。" },
+                { title: "食品安全检测", content: "食品安全检测是指运用物理、化学、生物等科学技术方法，对食品中有毒有害物质进行定性或定量分析的过程。" },
+                { title: "食品安全认证", content: "食品安全认证是指由认证机构证明产品、服务、管理体系符合相关技术规范、强制性要求或者标准的合格评定活动。" },
+                { title: "食品安全管理体系", content: "食品安全管理体系是指食品生产经营者为保证食品安全而建立的组织机构、职责制度、操作规程等构成的系统。" },
+                { title: "食品安全培训", content: "食品安全培训是指对食品生产经营者及其从业人员进行食品安全法律法规、标准规范和操作技能等方面的教育培训。" },
+                { title: "食品安全信息", content: "食品安全信息是指与食品安全相关的各种数据、资料、情报等的总称。" },
+                { title: "食品安全舆情", content: "食品安全舆情是指社会公众对食品安全问题的关注、讨论和评价所形成的舆论态势。" },
+                { title: "食品安全文化建设", content: "食品安全文化建设是指在食品生产经营过程中培育和践行食品安全价值观，形成良好的食品安全氛围。" },
+                { title: "食品安全科技创新", content: "食品安全科技创新是指运用新技术、新方法、新工艺提高食品安全保障水平的科技活动。" },
+                { title: "食品安全国际合作", content: "食品安全国际合作是指各国在食品安全领域开展的技术交流、标准协调、监管合作等活动。" },
+                { title: "食品安全应急处置", content: "食品安全应急处置是指对突发食品安全事件采取的紧急应对措施，以最大限度减少危害和损失。" },
+                { title: "食品安全风险交流", content: "食品安全风险交流是指风险评估者、风险管理者、消费者等各方就食品安全风险信息进行相互交流的过程。" },
+                { title: "食品安全社会共治", content: "食品安全社会共治是指政府、企业、社会组织、公众等各方共同参与食品安全治理的模式。" },
+                { title: "食品安全示范创建", content: "食品安全示范创建是指通过典型引路、以点带面的方式，推动食品安全整体水平提升的活动。" }
+            ],
+            sports: [
+                // 运动知识 (50条)
+                { title: "有氧运动", content: "有氧运动是指在氧气供应充足的情况下，以糖、脂肪等为燃料进行的运动，如慢跑、游泳、骑自行车等。" },
+                { title: "无氧运动", content: "无氧运动是指肌肉在缺氧状态下高速剧烈的运动，如举重、短跑、俯卧撑等。" },
+                { title: "心率与运动", content: "运动时心率是衡量运动强度的重要指标，一般最大心率=220-年龄，中等强度运动心率应达到最大心率的60%-70%。" },
+                { title: "运动前热身", content: "运动前热身可以提高肌肉温度和血液循环，预防运动损伤，一般需要5-10分钟。" },
+                { title: "运动后拉伸", content: "运动后拉伸有助于肌肉放松，减少乳酸堆积，预防肌肉僵硬和酸痛。" },
+                { title: "运动补水", content: "运动过程中应及时补充水分，一般每15-20分钟补水150-250毫升，避免脱水影响运动表现。" },
+                { title: "运动营养", content: "运动营养是指为满足运动需求而合理摄入的营养素，包括碳水化合物、蛋白质、脂肪、维生素和矿物质等。" },
+                { title: "运动疲劳", content: "运动疲劳是指运动过程中机体生理过程不能继续机能在特定水平上进行和不能维持预定的运动强度。" },
+                { title: "运动恢复", content: "运动恢复是指机体在运动过程中和运动结束后，各器官系统功能恢复到运动前水平的过程。" },
+                { title: "运动损伤", content: "运动损伤是指在体育运动过程中发生的各种损伤，包括急性损伤和慢性损伤。" },
+                { title: "运动处方", content: "运动处方是指根据个体的健康状况、体能水平和运动目的，制定的个性化运动方案。" },
+                { title: "运动能力", content: "运动能力是指人体从事体育活动所具备的各种能力，包括力量、速度、耐力、灵敏、柔韧等。" },
+                { title: "身体素质", content: "身体素质是指人体在活动中所表现出来的力量、速度、耐力、灵敏、柔韧等机能能力。" },
+                { title: "体能训练", content: "体能训练是指发展运动员身体形态、机能和运动素质，改善身体机能，提高运动能力的训练过程。" },
+                { title: "运动技能", content: "运动技能是指人体在运动中掌握和有效地完成专门动作的能力。" },
+                { title: "运动心理", content: "运动心理是指研究体育运动中人的心理活动特点和规律的学科，包括运动动机、情绪、意志等。" },
+                { title: "运动生理", content: "运动生理是指研究人体在体育活动影响下机能活动变化规律的科学。" },
+                { title: "运动生物力学", content: "运动生物力学是研究体育运动中人体机械运动规律的科学。" },
+                { title: "运动医学", content: "运动医学是研究与体育运动有关的医学问题，运用医学的知识和技术对运动参加者进行医学监督和指导的学科。" },
+                { title: "运动康复", content: "运动康复是指通过运动的方法促进伤病康复，恢复身体功能的治疗方法。" },
+                { title: "健身锻炼", content: "健身锻炼是指以增强体质、增进健康、愉悦身心为目的的身体活动。" },
+                { title: "减肥运动", content: "减肥运动是指通过增加能量消耗，促进脂肪燃烧，达到减轻体重目的的运动方式。" },
+                { title: "增肌运动", content: "增肌运动是指通过力量训练等方式增加肌肉体积和力量的运动。" },
+                { title: "耐力训练", content: "耐力训练是指提高人体长时间进行肌肉活动的能力，包括有氧耐力和无氧耐力训练。" },
+                { title: "力量训练", content: "力量训练是指通过抗阻力练习提高肌肉力量和体积的训练方法。" },
+                { title: "速度训练", content: "速度训练是指提高人体快速运动能力的训练方法。" },
+                { title: "灵敏训练", content: "灵敏训练是指提高人体在各种突然变换的条件下快速、准确、协调地完成动作能力的训练方法。" },
+                { title: "柔韧训练", content: "柔韧训练是指提高关节活动幅度和肌肉、韧带伸展能力的训练方法。" },
+                { title: "平衡训练", content: "平衡训练是指提高人体维持姿势稳定能力的训练方法。" },
+                { title: "协调训练", content: "协调训练是指提高人体各器官系统在时间和空间上相互配合完成动作能力的训练方法。" },
+                { title: "反应训练", content: "反应训练是指提高人体对刺激信号快速反应能力的训练方法。" },
+                { title: "爆发力训练", content: "爆发力训练是指提高人体在最短时间内发挥最大力量能力的训练方法。" },
+                { title: "核心力量", content: "核心力量是指人体躯干核心部位的肌肉力量，是连接上下肢的枢纽和发力源。" },
+                { title: "功能性训练", content: "功能性训练是指以提高日常生活和运动中实际功能表现为目标的训练方法。" },
+                { title: "交叉训练", content: "交叉训练是指结合多种不同运动项目的训练方法，以提高全面身体素质。" },
+                { title: "高强度间歇训练", content: "高强度间歇训练是指在高强度运动和低强度运动或休息之间交替进行的训练方法。" },
+                { title: "循环训练", content: "循环训练是指将几个不同的练习按一定顺序排列组成一组，依次完成的训练方法。" },
+                { title: "渐进式训练", content: "渐进式训练是指逐步增加运动强度、时间或频率的训练原则。" },
+                { title: "超量恢复", content: "超量恢复是指机体在恢复过程中，各种能量物质和机能不仅恢复到原有水平，而且超过原有水平的现象。" },
+                { title: "运动适应", content: "运动适应是指人体长期进行体育锻炼后，在形态结构、生理机能和运动能力等方面发生的良好变化。" },
+                { title: "运动禁忌症", content: "运动禁忌症是指某些疾病或身体状况下不宜进行运动的情况。" },
+                { title: "运动风险评估", content: "运动风险评估是指对运动过程中可能出现的风险因素进行识别、分析和评价的过程。" },
+                { title: "运动安全", content: "运动安全是指在运动过程中采取各种措施预防运动损伤和意外事故的发生。" },
+                { title: "运动装备", content: "运动装备是指进行体育运动时所使用的各种器材和服装，对保护身体和提高运动表现有重要作用。" },
+                { title: "运动环境", content: "运动环境是指进行体育运动时的外部条件，包括场地、气候、空气质量等。" },
+                { title: "运动季节性", content: "运动季节性是指根据不同季节的气候特点选择适宜的运动项目和方式。" },
+                { title: "室内外运动", content: "室内外运动是指根据运动场所的不同分为室内运动和室外运动，各有其特点和优势。" },
+                { title: "团体运动", content: "团体运动是指需要多人协作完成的运动项目，如篮球、足球、排球等。" },
+                { title: "个人运动", content: "个人运动是指可以独立完成的运动项目，如跑步、游泳、瑜伽等。" },
+                { title: "运动社交", content: "运动社交是指通过体育运动结识朋友、增进友谊、扩大社交圈的活动。" }
+            ],
+            health: [
+                // 健康知识 (50条)
+                { title: "健康四大基石", content: "世界卫生组织提出健康的四大基石是：合理膳食、适量运动、戒烟限酒、心理平衡。" },
+                { title: "合理膳食", content: "合理膳食是指通过合理的饮食搭配，满足人体对各种营养素的需求，维持身体健康。" },
+                { title: "均衡营养", content: "均衡营养是指通过食物摄入人体所需的各类营养素，包括蛋白质、脂肪、碳水化合物、维生素、矿物质和水。" },
+                { title: "膳食纤维", content: "膳食纤维是指不能被人体消化酶消化的植物源食物成分，有助于肠道健康和控制体重。" },
+                { title: "维生素", content: "维生素是维持人体正常生理功能所必需的一类有机化合物，分为脂溶性维生素和水溶性维生素。" },
+                { title: "矿物质", content: "矿物质是指人体维持正常生理功能所必需的无机元素，包括钙、铁、锌、硒等。" },
+                { title: "抗氧化", content: "抗氧化是指通过摄入抗氧化物质（如维生素C、维生素E、花青素等）清除自由基，延缓衰老。" },
+                { title: "免疫力", content: "免疫力是指人体抵抗疾病的能力，通过均衡营养、适量运动、充足睡眠等方式可以提高免疫力。" },
+                { title: "慢性病预防", content: "慢性病预防是指通过健康的生活方式预防高血压、糖尿病、心脑血管疾病等慢性疾病的发生。" },
+                { title: "健康体检", content: "健康体检是指通过医学检查手段早期发现疾病或健康隐患，实现疾病的早发现、早诊断、早治疗。" },
+                { title: "心理健康", content: "心理健康是指人在身体、智能以及情感上与他人的心理健康不相矛盾的范围内，将个人心境发展成最佳的状态。" },
+                { title: "压力管理", content: "压力管理是指通过各种方法和技巧应对生活和工作中的压力，保持身心健康。" },
+                { title: "睡眠健康", content: "睡眠健康是指保持充足、高质量的睡眠，成年人每天应保证7-9小时的睡眠时间。" },
+                { title: "作息规律", content: "作息规律是指按照人体生物钟的节律安排工作、学习和休息时间，有利于身体健康。" },
+                { title: "戒烟", content: "戒烟是指停止吸烟行为，可以显著降低患肺癌、心血管疾病等疾病的风险。" },
+                { title: "限酒", content: "限酒是指控制酒精摄入量，男性每日不超过25g酒精，女性不超过15g酒精。" },
+                { title: "体重管理", content: "体重管理是指通过合理饮食和适量运动维持健康的体重范围，避免肥胖或消瘦。" },
+                { title: "BMI指数", content: "BMI指数是体重指数，计算公式为体重(kg)/身高(m)²，正常范围为18.5-23.9。" },
+                { title: "腰臀比", content: "腰臀比是指腰围与臀围的比值，男性应<0.9，女性应<0.8，是评估中心性肥胖的重要指标。" },
+                { title: "血压", content: "血压是指血液在血管内流动时对血管壁产生的压力，正常血压应<140/90mmHg。" },
+                { title: "血糖", content: "血糖是指血液中的葡萄糖浓度，空腹血糖正常值为3.9-6.1mmol/L。" },
+                { title: "血脂", content: "血脂是指血液中的脂质成分，包括胆固醇、甘油三酯等，异常是心脑血管疾病的重要危险因素。" },
+                { title: "心率", content: "心率是指心脏每分钟跳动的次数，成年人静息心率正常范围为60-100次/分钟。" },
+                { title: "体温", content: "体温是指人体内部的温度，正常腋下体温为36-37℃。" },
+                { title: "呼吸", content: "呼吸是指人体与外界环境进行气体交换的过程，成年人安静时呼吸频率为16-20次/分钟。" },
+                { title: "新陈代谢", content: "新陈代谢是指人体内发生的所有化学反应的总和，包括物质代谢和能量代谢。" },
+                { title: "内分泌", content: "内分泌是指内分泌腺或内分泌细胞分泌激素调节机体功能的生理过程。" },
+                { title: "免疫系统", content: "免疫系统是指机体执行免疫功能的组织系统，包括免疫器官、免疫细胞和免疫分子。" },
+                { title: "消化系统", content: "消化系统是指执行消化功能的器官系统，包括口腔、食管、胃、肠、肝、胰等器官。" },
+                { title: "循环系统", content: "循环系统是指执行血液循环功能的器官系统，包括心脏、血管和血液。" },
+                { title: "呼吸系统", content: "呼吸系统是指执行呼吸功能的器官系统，包括鼻、咽、喉、气管、支气管和肺。" },
+                { title: "神经系统", content: "神经系统是指调节机体功能的器官系统，包括中枢神经系统和周围神经系统。" },
+                { title: "泌尿系统", content: "泌尿系统是指执行排泄功能的器官系统，包括肾、输尿管、膀胱和尿道。" },
+                { title: "生殖系统", content: "生殖系统是指执行生殖功能的器官系统，男性包括睾丸、附睾、输精管等，女性包括卵巢、输卵管、子宫等。" },
+                { title: "骨骼系统", content: "骨骼系统是指由骨骼和关节组成的器官系统，具有支持、保护、运动和造血等功能。" },
+                { title: "肌肉系统", content: "肌肉系统是指由肌肉组成的器官系统，具有运动、支持和维持体温等功能。" },
+                { title: "皮肤系统", content: "皮肤系统是指由皮肤及其附属器官组成的器官系统，具有保护、调节体温和感受外界刺激等功能。" },
+                { title: "感官系统", content: "感官系统是指感受外界刺激的器官系统，包括视觉、听觉、嗅觉、味觉和触觉系统。" },
+                { title: "亚健康", content: "亚健康是指人体处于健康和疾病之间的状态，表现为一定不适但未达到疾病诊断标准。" },
+                { title: "职业病", content: "职业病是指劳动者在职业活动中因接触职业性有害因素而引起的疾病。" },
+                { title: "传染病", content: "传染病是指由病原微生物引起的能在人与人、动物与动物或人与动物之间相互传播的疾病。" },
+                { title: "慢性病", content: "慢性病是指起病隐匿、病程较长、缺乏确切传染性生物病因证据的疾病，如高血压、糖尿病等。" },
+                { title: "急救知识", content: "急救知识是指在紧急情况下为伤病员提供初步、及时、有效的救护措施的知识和技能。" },
+                { title: "心肺复苏", content: "心肺复苏是指对心跳呼吸骤停的患者采取的紧急抢救措施，包括胸外按压和人工呼吸。" },
+                { title: "常见疾病预防", content: "常见疾病预防是指通过健康生活方式和定期体检等方式预防感冒、腹泻等常见疾病的发生。" },
+                { title: "用药安全", content: "用药安全是指合理、正确地使用药物，避免药物不良反应和药物相互作用。" },
+                { title: "疫苗接种", content: "疫苗接种是指通过接种疫苗刺激机体产生特异性免疫，预防相应传染病的发生。" },
+                { title: "健康老龄化", content: "健康老龄化是指老年人在晚年保持身体、心理和社会功能的完好状态。" },
+                { title: "儿童健康", content: "儿童健康是指0-14岁儿童在身体、心理和社会适应方面的良好状态。" },
+                { title: "女性健康", content: "女性健康是指女性在生理、心理和社会方面的良好状态，需要特别关注生殖健康等问题。" }
+            ]
+        };
+
+        // 游戏状态变量
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let questionAnswered = false;
+        let currentScore = 0;
+        let answeredQuestions = [];
+        let selectedQuestions = [];
+        let learningMode = false;
+        let currentSubject = '';
+        let currentPage = 1;
+        let currentUser = null;
+        const itemsPerPage = 5;
+
+        // DOM元素
+        const quizSetup = document.getElementById('quizSetup');
+        const quizInfo = document.getElementById('quizInfo');
+        const questionContainer = document.getElementById('questionContainer');
+        const quizResult = document.getElementById('quizResult');
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+        const learningModeDiv = document.getElementById('learningMode');
+        const knowledgeList = document.getElementById('knowledgeList');
+        const currentPageSpan = document.getElementById('currentPage');
+        const totalPagesSpan = document.getElementById('totalPages');
+        const authContainer = document.getElementById('authContainer');
+        const userInfo = document.getElementById('userInfo');
+        const userName = document.getElementById('userName');
+
+        // 初始化
+        function init() {
+            // 检查是否已登录
+            checkLoginStatus();
+            
+            // 检查是否开启学习模式
+            checkLearningMode();
+            
+            // 绑定事件
+            document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
+            document.getElementById('submitAnswerBtn').addEventListener('click', submitAnswer);
+            document.getElementById('prevQuestionBtn').addEventListener('click', showPrevQuestion);
+            document.getElementById('nextQuestionBtn').addEventListener('click', showNextQuestion);
+            backToMenuBtn.addEventListener('click', () => {
+                window.location.href = '../index.html';
+            });
+            
+            // 用户认证事件
+            document.getElementById('loginBtn').addEventListener('click', login);
+            document.getElementById('registerBtn').addEventListener('click', register);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('showRegister').addEventListener('click', showRegisterForm);
+            document.getElementById('showLogin').addEventListener('click', showLoginForm);
+            
+            // 学习模式事件绑定
+            document.querySelectorAll('.subject-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除其他按钮的active状态
+                    document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active'));
+                    // 添加当前按钮的active状态
+                    this.classList.add('active');
+                    // 选择主题
+                    selectSubject(this.dataset.subject);
+                });
+            });
+            
+            document.getElementById('prevPageBtn').addEventListener('click', showPrevPage);
+            document.getElementById('nextPageBtn').addEventListener('click', showNextPage);
+            document.getElementById('backToQuizBtn').addEventListener('click', showQuizMode);
+            
+            // 初始化积分系统
+            initQuizSystem();
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            const user = localStorage.getItem('quizUser');
+            if (user) {
+                currentUser = JSON.parse(user);
+                showUserInfo();
+            } else {
+                showAuthForm();
+            }
+        }
+
+        // 显示认证表单
+        function showAuthForm() {
+            authContainer.style.display = 'block';
+            userInfo.style.display = 'none';
+            quizSetup.style.display = 'none';
+            learningModeDiv.style.display = 'none';
+        }
+
+        // 显示用户信息
+        function showUserInfo() {
+            authContainer.style.display = 'none';
+            userInfo.style.display = 'flex';
+            userName.textContent = currentUser.name;
+            
+            // 如果开启学习模式，显示学习模式界面
+            if (learningMode) {
+                showLearningMode();
+            } else {
+                quizSetup.style.display = 'block';
+            }
+        }
+
+        // 显示注册表单
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('loginError').textContent = '';
+        }
+
+        // 显示登录表单
+        function showLoginForm() {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerError').textContent = '';
+        }
+
+        // 用户注册
+        function register() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const registerError = document.getElementById('registerError');
+            
+            // 验证输入
+            if (!name || !email || !password || !confirmPassword) {
+                registerError.textContent = '请填写所有字段';
+                return;
+            }
+            
+            // 验证邮箱格式
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                registerError.textContent = '请输入有效的邮箱地址';
+                return;
+            }
+            
+            // 验证密码长度
+            if (password.length < 6) {
+                registerError.textContent = '密码长度至少为6位';
+                return;
+            }
+            
+            // 验证密码确认
+            if (password !== confirmPassword) {
+                registerError.textContent = '两次输入的密码不一致';
+                return;
+            }
+            
+            // 检查邮箱是否已注册
+            const users = JSON.parse(localStorage.getItem('quizUsers') || '[]');
+            const existingUser = users.find(user => user.email === email);
+            if (existingUser) {
+                registerError.textContent = '该邮箱已被注册';
+                return;
+            }
+            
+            // 创建新用户
+            const newUser = {
+                id: Date.now(),
+                name: name,
+                email: email,
+                password: password, // 实际项目中应该加密存储
+                registeredAt: new Date().toISOString()
+            };
+            
+            users.push(newUser);
+            localStorage.setItem('quizUsers', JSON.stringify(users));
+            
+            // 自动登录
+            currentUser = newUser;
+            localStorage.setItem('quizUser', JSON.stringify(newUser));
+            
+            // 显示用户信息
+            showUserInfo();
+        }
+
+        // 用户登录
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const loginError = document.getElementById('loginError');
+            
+            // 验证输入
+            if (!email || !password) {
+                loginError.textContent = '请填写所有字段';
+                return;
+            }
+            
+            // 验证邮箱格式
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                loginError.textContent = '请输入有效的邮箱地址';
+                return;
+            }
+            
+            // 查找用户
+            const users = JSON.parse(localStorage.getItem('quizUsers') || '[]');
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('quizUser', JSON.stringify(user));
+                showUserInfo();
+            } else {
+                loginError.textContent = '邮箱或密码错误';
+            }
+        }
+
+        // 用户退出登录
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('quizUser');
+            showAuthForm();
+        }
+
+        // 检查是否开启学习模式
+        function checkLearningMode() {
+            // 从localStorage加载设置
+            const savedSettings = localStorage.getItem('envGameSettings');
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    learningMode = settings.learningMode || false;
+                } catch (e) {
+                    console.error('加载设置失败:', e);
+                }
+            }
+        }
+
+        // 显示学习模式
+        function showLearningMode() {
+            quizSetup.style.display = 'none';
+            learningModeDiv.style.display = 'block';
+        }
+
+        // 显示问答模式
+        function showQuizMode() {
+            learningModeDiv.style.display = 'none';
+            quizSetup.style.display = 'block';
+        }
+
+        // 选择学习主题
+        function selectSubject(subject) {
+            currentSubject = subject;
+            currentPage = 1;
+            showKnowledgeList();
+        }
+
+        // 显示知识点列表
+        function showKnowledgeList() {
+            if (!currentSubject) return;
+            
+            const knowledgeItems = knowledgeBase[currentSubject];
+            const totalPages = Math.ceil(knowledgeItems.length / itemsPerPage);
+            totalPagesSpan.textContent = totalPages;
+            
+            // 计算当前页显示的知识点范围
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, knowledgeItems.length);
+            
+            // 清空知识点列表
+            knowledgeList.innerHTML = '';
+            
+            // 显示当前页的知识点
+            for (let i = startIndex; i < endIndex; i++) {
+                const item = knowledgeItems[i];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'knowledge-item';
+                itemDiv.innerHTML = `
+                    <h4>${item.title}</h4>
+                    <p>${item.content}</p>
+                `;
+                knowledgeList.appendChild(itemDiv);
+            }
+            
+            // 更新页码显示
+            currentPageSpan.textContent = currentPage;
+            
+            // 更新翻页按钮状态
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+        }
+
+        // 显示上一页
+        function showPrevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                showKnowledgeList();
+            }
+        }
+
+        // 显示下一页
+        function showNextPage() {
+            const totalPages = Math.ceil(knowledgeBase[currentSubject].length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                showKnowledgeList();
+            }
+        }
+
+        // 初始化积分系统
+        function initQuizSystem() {
+            // 重置相关变量
+            currentQuestionIndex = 0;
+            userAnswers = new Array(quizQuestions.length).fill(null);
+            questionAnswered = false;
+            currentScore = 0;
+            answeredQuestions = [];
+            selectedQuestions = [];
+            
+            // 更新积分显示
+            updateScoreDisplay();
+            
+            // 显示设置界面，隐藏答题界面
+            quizSetup.style.display = 'block';
+            quizInfo.style.display = 'none';
+            questionContainer.style.display = 'none';
+            
+            // 如果开启学习模式，隐藏答题功能
+            if (learningMode) {
+                quizSetup.style.display = 'none';
+            }
+        }
+
+        // 开始答题
+        function startQuiz() {
+            // 检查是否已登录
+            if (!currentUser) {
+                alert('请先登录再开始答题');
+                showAuthForm();
+                return;
+            }
+            
+            const questionCountSelect = document.getElementById('questionCount');
+            const questionCount = parseInt(questionCountSelect.value);
+            
+            // 如果选择"全部题目"，则设置为题库总数
+            if (questionCount === 0) {
+                questionCount = quizQuestions.length;
+            }
+            
+            // 显示加载状态
+            showLoading();
+            
+            // 使用本地题目
+            const shuffledQuestions = [...quizQuestions].sort(() => 0.5 - Math.random());
+            selectedQuestions = shuffledQuestions.slice(0, questionCount);
+            
+            // 隐藏加载状态
+            hideLoading();
+            
+            // 重置游戏状态
+            resetQuizState();
+            
+            // 显示测验界面
+            quizSetup.style.display = 'none';
+            quizInfo.style.display = 'block';
+            questionContainer.style.display = 'block';
+            
+            // 显示第一题
+            showQuestion(0);
+        }
+
+        // 更新积分显示
+        function updateScoreDisplay() {
+            document.getElementById('currentScore').textContent = currentScore;
+            // 简化处理，实际应用中可能需要从localStorage加载
+            document.getElementById('dailyScore').textContent = Math.min(20, currentScore);
+        }
+
+        // 显示问题
+        function showQuestion(index) {
+            // 检查索引是否有效
+            if (index < 0 || index >= selectedQuestions.length) {
+                // 如果所有题目都答完了，显示结果
+                showQuizResult();
+                return;
+            }
+            
+            // 修复：正确获取题目对象
+            const question = selectedQuestions[index];
+            document.getElementById('questionText').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            // 修复：正确遍历选项
+            question.options.forEach((option, i) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectOption(i, index));
+                
+                // 修复：正确检查用户答案
+                if (userAnswers[index] === i) {
+                    optionElement.classList.add('selected');
+                }
+                
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            document.getElementById('quizProgress').textContent = `问题 ${index + 1} / ${selectedQuestions.length}`;
+            
+            // 更新按钮状态
+            document.getElementById('prevQuestionBtn').disabled = index === 0;
+            document.getElementById('nextQuestionBtn').disabled = index === selectedQuestions.length - 1;
+            
+            // 重置答题状态
+            questionAnswered = false;
+            quizResult.style.display = 'none';
+            document.getElementById('submitAnswerBtn').disabled = false;
+        }
+
+        // 选择选项
+        function selectOption(optionIndex, questionIndex) {
+            if (questionAnswered) return;
+            
+            // 使用传入的题目索引或者当前题目索引
+            const actualQuestionIndex = questionIndex !== undefined ? questionIndex : currentQuestionIndex;
+            userAnswers[actualQuestionIndex] = optionIndex;
+            
+            // 更新选项样式
+            const options = document.querySelectorAll('.option');
+            options.forEach((option, i) => {
+                if (i === optionIndex) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+        }
+
+        // 显示上一题
+        function showPrevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+            }
+        }
+
+        // 显示下一题
+        function showNextQuestion() {
+            if (currentQuestionIndex < selectedQuestions.length - 1) {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            }
+        }
+
+        // 提交答案
+        function submitAnswer() {
+            const actualQuestionIndex = selectedQuestions[currentQuestionIndex];
+            
+            if (userAnswers[actualQuestionIndex] === null) {
+                alert('请选择一个答案');
+                return;
+            }
+            
+            // 检查这个问题是否已经回答过
+            if (answeredQuestions.includes(actualQuestionIndex)) {
+                // 如果已经回答过，直接显示结果
+                showQuestionResult(actualQuestionIndex);
+                return;
+            }
+            
+            const question = quizQuestions[actualQuestionIndex];
+            const isCorrect = userAnswers[actualQuestionIndex] === question.correctAnswer;
+            const resultElement = document.getElementById('quizResult');
+            
+            // 添加到已回答列表
+            answeredQuestions.push(actualQuestionIndex);
+            
+            if (isCorrect) {
+                // 增加积分
+                currentScore++;
+                updateScoreDisplay();
+                
+                // 随机选择积极反馈语
+                const positiveFeedbacks = [
+                    '回答正确，真棒！',
+                    '太厉害了，答对了！',
+                    '恭喜你，答对了！',
+                    '非常棒，继续加油！',
+                    '答得真好，为你点赞！',
+                    '完全正确，你真聪明！',
+                    '答对了，继续保持！',
+                    '太棒了，你掌握得很好！'
+                ];
+                
+                const randomFeedback = positiveFeedbacks[Math.floor(Math.random() * positiveFeedbacks.length)];
+                resultElement.textContent = randomFeedback + ' ' + question.explanation;
+                resultElement.className = 'correct';
+            } else {
+                resultElement.textContent = `错误! 正确答案是: ${question.options[question.correctAnswer]}. ${question.explanation}`;
+                resultElement.className = 'incorrect';
+            }
+            
+            resultElement.style.display = 'block';
+            
+            questionAnswered = true;
+            document.getElementById('submitAnswerBtn').disabled = true;
+            
+            // 自动跳转到下一题（如果有）
+            setTimeout(() => {
+                if (currentQuestionIndex < selectedQuestions.length - 1) {
+                    showNextQuestion();
+                } else {
+                    // 所有题目已完成，显示结果
+                    showQuizResult();
+                }
+            }, 2000);
+        }
+
+        // 显示单个问题的结果
+        function showQuestionResult(questionIndex) {
+            const question = quizQuestions[questionIndex];
+            const isCorrect = userAnswers[questionIndex] === question.correctAnswer;
+            const resultElement = document.getElementById('quizResult');
+            
+            if (isCorrect) {
+                resultElement.textContent = '回答正确！' + question.explanation;
+                resultElement.className = 'correct';
+            } else {
+                resultElement.textContent = `错误! 正确答案是: ${question.options[question.correctAnswer]}. ${question.explanation}`;
+                resultElement.className = 'incorrect';
+            }
+            
+            resultElement.style.display = 'block';
+            questionAnswered = true;
+            document.getElementById('submitAnswerBtn').disabled = true;
+        }
+
+        // 显示测验结果
+        function showQuizResult() {
+            // 隐藏问题容器
+            questionContainer.style.display = 'none';
+            
+            // 保存用户分数到排行榜
+            saveUserScore(currentScore);
+            
+            // 显示结果
+            quizResult.innerHTML = `
+                <h3>答题完成！</h3>
+                <p>本次得分: ${currentScore} 分</p>
+                <p>今日累计积分: ${Math.min(20, currentScore)} / 20 分</p>
+                <button id="restartQuizBtn" style="margin-top: 15px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">重新开始</button>
+                <button id="menuBtn" style="margin-top: 15px; margin-left: 10px; padding: 10px 20px; background-color: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">返回主菜单</button>
+                <button id="leaderboardBtn" style="margin-top: 15px; margin-left: 10px; padding: 10px 20px; background-color: #9C27B0; color: white; border: none; border-radius: 5px; cursor: pointer;">查看排行榜</button>
+            `;
+            quizResult.style.display = 'block';
+            
+            // 添加按钮事件
+            document.getElementById('restartQuizBtn').addEventListener('click', initQuizSystem);
+            document.getElementById('menuBtn').addEventListener('click', () => {
+                window.location.href = '../index.html';
+            });
+            document.getElementById('leaderboardBtn').addEventListener('click', () => {
+                window.location.href = '../leaderboard/leaderboard.html';
+            });
+        }
+
+        // 保存用户分数到排行榜
+        function saveUserScore(score) {
+            if (!currentUser) return;
+            
+            // 从localStorage获取用户的分数记录
+            const userScores = JSON.parse(localStorage.getItem('userScores') || '{}');
+            
+            // 如果该用户还没有分数记录，初始化一个空数组
+            if (!userScores[currentUser.email]) {
+                userScores[currentUser.email] = [];
+            }
+            
+            // 添加新分数
+            userScores[currentUser.email].push(score);
+            
+            // 保存回localStorage
+            localStorage.setItem('userScores', JSON.stringify(userScores));
+        }
+        
+        // 重置测验状态
+        function resetQuizState() {
+            currentQuestionIndex = 0;
+            userAnswers = new Array(selectedQuestions.length).fill(null);
+            questionAnswered = false;
+            currentScore = 0;
+            answeredQuestions = [];
+            
+            // 更新积分显示
+            updateScoreDisplay();
+        }
+        
+        // 初始化
+        window.onload = init;
+    </script>
+    
+    <!-- 引入后端API模块 -->
+    <script src="../js/api.js"></script>
+    <script>
+        // 显示加载状态
+        function showLoading() {
+            const loadingElement = document.createElement('div');
+            loadingElement.id = 'loading';
+            loadingElement.className = 'loading';
+            loadingElement.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p>正在加载题目...</p>
+            `;
+            document.getElementById('quizContainer').appendChild(loadingElement);
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            const loadingElement = document.getElementById('loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
+
+        // 测试后端连接
+        async function testBackendConnection() {
+            console.log('正在测试与后端服务器的连接...');
+            try {
+                const isConnected = await BackendAPI.testConnection();
+                if (isConnected) {
+                    console.log('后端服务器连接成功！');
+                } else {
+                    console.warn('无法连接到后端服务器，将使用本地数据');
+                }
+            } catch (error) {
+                console.error('连接后端服务器时出错:', error);
+            }
+        }
+
+        // 开始测验
+        async function startQuiz() {
+            // 检查是否已登录
+            if (!currentUser) {
+                alert('请先登录再开始答题');
+                showAuthForm();
+                return;
+            }
+            
+            const questionCountSelect = document.getElementById('questionCount');
+            let questionCount = parseInt(questionCountSelect.value);
+            
+            // 如果选择"全部题目"，则设置为题库总数
+            if (questionCount === 0) {
+                questionCount = quizQuestions.length;
+            }
+            
+            showLoading();
+            
+            try {
+                // 尝试从后端获取题目
+                const backendQuestions = await BackendAPI.fetchQuestions(questionCount);
+                selectedQuestions = backendQuestions;
+                console.log('使用后端题目:', selectedQuestions);
+            } catch (error) {
+                console.error('获取后端题目失败，使用本地题目:', error);
+                // 如果后端获取失败，则使用本地题目
+                const shuffledQuestions = [...quizQuestions].sort(() => 0.5 - Math.random());
+                selectedQuestions = shuffledQuestions.slice(0, questionCount);
+            } finally {
+                hideLoading();
+            }
+            
+            // 重置游戏状态
+            resetQuizState();
+            
+            // 初始化用户答案数组
+            userAnswers = new Array(selectedQuestions.length).fill(null);
+            
+            // 显示测验界面
+            quizSetup.style.display = 'none';
+            quizInfo.style.display = 'block';
+            questionContainer.style.display = 'block';
+            
+            // 显示第一题
+            currentQuestionIndex = 0;
+            showQuestion(0);
+        }
+
+        // 提交答案
+        async function submitAnswer() {
+            if (userAnswers[currentQuestionIndex] === null) {
+                alert('请选择一个答案');
+                return;
+            }
+            
+            // 检查这个问题是否已经回答过
+            if (answeredQuestions.includes(currentQuestionIndex)) {
+                // 如果已经回答过，直接显示结果
+                showQuestionResult(currentQuestionIndex, userAnswers[currentQuestionIndex] === selectedQuestions[currentQuestionIndex].correctAnswer);
+                return;
+            }
+            
+            const question = selectedQuestions[currentQuestionIndex];
+            const isCorrect = userAnswers[currentQuestionIndex] === question.correctAnswer;
+            
+            // 更新答题状态
+            answeredQuestions.push(currentQuestionIndex);
+            questionAnswered = true;
+            
+            // 更新积分
+            if (isCorrect) {
+                currentScore += 10;
+                updateScoreDisplay();
+                
+                // 如果用户已登录，向后端添加积分
+                if (currentUser) {
+                    try {
+                        const pointsData = {
+                            points: 10,
+                            source: 'correct_answer',
+                            description: `正确回答问题 "${question.question}"`
+                        };
+                        
+                        await BackendAPI.addPoints(currentUser.id, pointsData.points, pointsData.source, pointsData.description);
+                        console.log('积分已添加到后端');
+                    } catch (error) {
+                        console.error('添加积分到后端失败:', error);
+                    }
+                }
+            }
+            
+            // 显示结果
+            showQuestionResult(currentQuestionIndex, isCorrect);
+            
+            // 禁用提交按钮
+            document.getElementById('submitAnswerBtn').disabled = true;
+        }
+
+        // 显示测验结果
+        async function showQuizResult() {
+            const totalQuestions = selectedQuestions.length;
+            const correctAnswers = userAnswers.filter((answer, index) => 
+                answer === selectedQuestions[index].correctAnswer).length;
+            const score = Math.round((correctAnswers / totalQuestions) * 100);
+            
+            quizInfo.style.display = 'none';
+            questionContainer.style.display = 'none';
+            quizResult.style.display = 'block';
+            
+            // 生成结果内容
+            let resultHTML = `
+                <h2>测验完成!</h2>
+                <div class="result-stats">
+                    <div>总题数: ${totalQuestions}</div>
+                    <div>答对题数: ${correctAnswers}</div>
+                    <div>得分: ${score}分</div>
+                    <div>获得积分: ${currentScore}</div>
+                </div>
+            `;
+            
+            // 根据得分给出评价
+            if (score >= 90) {
+                resultHTML += `<p>太棒了！你对环保知识掌握得非常好！</p>`;
+            } else if (score >= 70) {
+                resultHTML += `<p>不错！你对环保知识有一定了解，继续加油！</p>`;
+            } else if (score >= 60) {
+                resultHTML += `<p>还可以！建议你多学习一些环保知识。</p>`;
+            } else {
+                resultHTML += `<p>需要加强学习哦！环保从我做起！</p>`;
+            }
+            
+            resultHTML += `<button id="restartQuizBtn" class="submit">重新开始</button>`;
+            quizResult.innerHTML = resultHTML;
+            
+            // 绑定重新开始按钮事件
+            document.getElementById('restartQuizBtn').addEventListener('click', () => {
+                quizResult.style.display = 'none';
+                quizSetup.style.display = 'block';
+            });
+            
+            // 如果用户已登录，提交结果到后端
+            if (currentUser) {
+                try {
+                    const resultData = {
+                        type: 'quiz_completion',
+                        data: {
+                            userId: currentUser.id,
+                            totalQuestions: totalQuestions,
+                            correctAnswers: correctAnswers,
+                            score: score,
+                            timestamp: new Date().toISOString()
+                        }
+                    };
+                    
+                    // 提交结果到后端
+                    await BackendAPI.submitQuizResult(resultData);
+                    
+                    console.log('测验结果已提交到后端');
+                } catch (error) {
+                    console.error('提交结果到后端失败:', error);
+                }
+            }
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            const loadingElement = document.createElement('div');
+            loadingElement.id = 'loading';
+            loadingElement.className = 'loading';
+            loadingElement.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p>正在加载题目...</p>
+            `;
+            document.getElementById('quizContainer').appendChild(loadingElement);
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            const loadingElement = document.getElementById('loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
+
+        // 测试后端连接
+        async function testBackendConnection() {
+            console.log('正在测试与后端服务器的连接...');
+            try {
+                const isConnected = await BackendAPI.testConnection();
+                if (isConnected) {
+                    console.log('后端服务器连接成功！');
+                } else {
+                    console.warn('无法连接到后端服务器，将使用本地数据');
+                }
+            } catch (error) {
+                console.error('连接后端服务器时出错:', error);
+            }
+        }
+        
+        // 页面加载完成后测试后端连接
+        testBackendConnection();
+        
+        // 添加按钮事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 开始答题按钮
+            const startQuizBtn = document.getElementById('startQuizBtn');
+            if (startQuizBtn) {
+                startQuizBtn.addEventListener('click', startQuiz);
+            }
+            
+            // 提交答案按钮
+            const submitAnswerBtn = document.getElementById('submitAnswerBtn');
+            if (submitAnswerBtn) {
+                submitAnswerBtn.addEventListener('click', submitAnswer);
+            }
+            
+            // 上一题按钮
+            const prevQuestionBtn = document.getElementById('prevQuestionBtn');
+            if (prevQuestionBtn) {
+                prevQuestionBtn.addEventListener('click', showPrevQuestion);
+            }
+            
+            // 下一题按钮
+            const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+            if (nextQuestionBtn) {
+                nextQuestionBtn.addEventListener('click', showNextQuestion);
+            }
+            
+            // 登录按钮
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', login);
+            }
+            
+            // 注册按钮
+            const registerBtn = document.getElementById('registerBtn');
+            if (registerBtn) {
+                registerBtn.addEventListener('click', register);
+            }
+            
+            // 退出登录按钮
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+            }
+            
+            // 显示注册表单链接
+            const showRegister = document.getElementById('showRegister');
+            if (showRegister) {
+                showRegister.addEventListener('click', showRegisterForm);
+            }
+            
+            // 显示登录表单链接
+            const showLogin = document.getElementById('showLogin');
+            if (showLogin) {
+                showLogin.addEventListener('click', showLoginForm);
+            }
+        });
+    </script>
+    
+</body>
+</html>
