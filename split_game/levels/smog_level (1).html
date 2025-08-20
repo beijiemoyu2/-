@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环保卫士 - 雾霾关</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('雾霾背景.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        #smogLevel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .scene-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        #timeDisplay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .health-bar-container {
+            position: absolute;
+            top: 120px; /* 再往下移动一些 */
+            left: 20px;
+            width: 250px; /* 增大宽度 */
+            height: 40px; /* 增大高度 */
+            background-color: transparent; /* 移除黑色阴影 */
+            border-radius: 5px;
+            z-index: 100;
+            padding: 5px;
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 30px; /* 增大高度 */
+            background-color: #f44336;
+            border-radius: 5px; /* 增大圆角 */
+            overflow: hidden;
+        }
+
+        .health-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 100%;
+            transition: width 0.3s;
+        }
+
+        .health-text {
+            position: absolute;
+            top: 10px; /* 调整位置 */
+            left: 15px; /* 调整位置 */
+            color: white;
+            font-weight: bold;
+            z-index: 101;
+            font-size: 16px; /* 增大字体 */
+        }
+
+        .player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: transparent;
+            border-radius: 50%;
+            z-index: 10;
+            /* 移除过渡动画以提高响应速度 */
+            background-image: url('./可达鸭.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .smog-core {
+            position: absolute;
+            width: 100px; /* 从80px增加到100px */
+            height: 100px; /* 从80px增加到100px */
+            background-image: url('雾霾核心111.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #000;
+            z-index: 5;
+        }
+
+        .purifier {
+            position: absolute;
+            width: 40px; /* 从30px增加到40px */
+            height: 40px; /* 从30px增加到40px */
+            background-image: url('净化器111.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: 0 0 10px #00BCD4;
+        }
+
+        .bullet {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #FF5722;
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: 0 0 5px #FF5722;
+        }
+
+        .health-pack {
+            position: absolute;
+            width: 30px; /* 从25px增加到30px */
+            height: 30px; /* 从25px增加到30px */
+            background-image: url('治疗包111.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            border-radius: 50%;
+            z-index: 6;
+            box-shadow: 0 0 8px #FF0000;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .placed-purifier {
+            position: absolute;
+            width: 40px; /* 从30px增加到40px */
+            height: 40px; /* 从30px增加到40px */
+            background-image: url('净化器111.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: 0 0 15px #00BCD4;
+        }
+
+        #coreArea {
+            position: absolute;
+            border: 2px dashed #00BCD4;
+            border-radius: 50%;
+            z-index: 4;
+        }
+
+        #gameTips {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            color: white;
+            z-index: 100;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            max-width: 250px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #gameTips strong {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        #closeTips {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        #controlsInfo {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        #completionMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #completionMessage button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #gameOverMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+        }
+
+        #gameOverMessage button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #backToMenuBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        #pauseBtn {
+            position: absolute;
+            top: 20px;
+            right: 120px; /* 在返回主菜单按钮的左边 */
+            padding: 10px 15px;
+            background-color: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        #pauseMenu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+        }
+
+        #pauseMenu button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #resumeBtn {
+            background-color: #2196F3;
+        }
+
+        #restartBtn {
+            background-color: #FF9800;
+        }
+
+        #difficultyMenu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 200;
+        }
+
+        #difficultyMenu button {
+            display: block;
+            width: 200px;
+            margin: 10px auto;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .easy {
+            background-color: #4CAF50;
+        }
+
+        .hard {
+            background-color: #FF9800;
+        }
+
+        .hell {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="smogLevel">
+            <div id="difficultyMenu">
+                <h2>选择难度</h2>
+                <button class="easy" data-difficulty="简单">简单 (5个核心)</button>
+                <button class="hard" data-difficulty="困难">困难 (10个核心)</button>
+                <button class="hell" data-difficulty="地狱">地狱 (15个核心)</button>
+            </div>
+            
+            <div class="scene-header">
+                <div>关卡: 雾霾之战</div>
+                <div>净化器收集: <span id="purifierCount">0</span>/5</div>
+                <div>已放置: <span id="placedCount">0</span>/5</div>
+            </div>
+            
+            <div id="timeDisplay">剩余时间: <span id="timeLeft">5:00</span></div>
+            
+            <div class="health-bar-container">
+                <div class="health-text">血量: <span id="playerHealth">100</span>/100</div>
+                <div class="health-bar">
+                    <div class="health-fill" id="healthFill"></div>
+                </div>
+            </div>
+            
+            <div class="player" id="smogPlayer"></div>
+            
+            <!-- 雾霾核心、净化器和子弹将通过JavaScript动态生成 -->
+            <div id="coreArea"></div>
+            
+            <div id="controlsInfo">WASD移动 | 收集并放置5个空气净化器到核心区域</div>
+            
+            <div id="gameTips">
+                <button id="closeTips">&times;</button>
+                <strong>玩法提示:</strong><br>
+                - WASD键控制移动<br>
+                - 收集蓝色净化器<br>
+                - 靠近雾霾核心按J键放置<br>
+                - 躲避红色粒子攻击<br>
+                - 血量为0时游戏结束
+            </div>
+            
+            <button id="pauseBtn">暂停</button>
+            <button id="backToMenuBtn">返回主菜单</button>
+            
+            <div id="pauseMenu">
+                <h2>游戏暂停</h2>
+                <button id="resumeBtn">继续游戏</button>
+                <button id="restartBtn">重新开始</button>
+                <button id="menuBtn">返回主菜单</button>
+            </div>
+            
+            <div id="completionMessage">
+                <h2>恭喜完成雾霾关!</h2>
+                <p>你已经成功放置了所有空气净化器，清除了雾霾!</p>
+                <button id="nextLevelBtn">进入下一关</button>
+            </div>
+            
+            <div id="gameOverMessage">
+                <h2>力竭倒下!</h2>
+                <p>您的血量已耗尽，未能清除雾霾。</p>
+                <button id="retryBtn">重新开始</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态管理
+        const gameState = {
+            playerPosition: { x: 50, y: 250 },
+            playerSpeed: 10 * (2/3), // 减小三分之一速度
+            playerHealth: 100, // 玩家血量系统
+            isPaused: false, // 添加暂停状态
+            startTime: null, // 游戏开始时间
+            timeLimit: 5 * 60 * 1000, // 5分钟时间限制
+            difficulty: '简单', // 添加难度设置，默认为简单
+            smog: {
+                purifiersCollected: 0,
+                totalPurifiers: 5,
+                placedPurifiers: 0,
+                cores: [],
+                purifiers: [],
+                bullets: [],
+                healthPacks: [], // 添加血包数组
+                lastBulletTime: 0
+            }
+        };
+
+        // DOM元素引用
+        const smogPlayer = document.getElementById('smogPlayer');
+        const purifierCount = document.getElementById('purifierCount');
+        const placedCount = document.getElementById('placedCount');
+        const coreArea = document.getElementById('coreArea');
+        const completionMessage = document.getElementById('completionMessage');
+        const playerHealth = document.getElementById('playerHealth'); // 添加血量显示元素引用
+        const healthFill = document.getElementById('healthFill'); // 添加血量条元素引用
+        const gameOverMessage = document.getElementById('gameOverMessage'); // 添加游戏结束元素引用
+        const gameTips = document.getElementById('gameTips'); // 添加提示框元素引用
+        const closeTips = document.getElementById('closeTips'); // 添加关闭提示按钮元素引用
+        const pauseBtn = document.getElementById('pauseBtn'); // 添加暂停按钮元素引用
+        const pauseMenu = document.getElementById('pauseMenu'); // 添加暂停菜单元素引用
+        const resumeBtn = document.getElementById('resumeBtn'); // 添加继续游戏按钮元素引用
+        const restartBtn = document.getElementById('restartBtn'); // 添加重新开始按钮元素引用
+        const menuBtn = document.getElementById('menuBtn'); // 添加返回主菜单按钮元素引用
+        const timeLeft = document.getElementById('timeLeft'); // 添加时间显示元素引用
+
+        // 初始化游戏
+        function initGame() {
+            // 隐藏所有游戏元素
+            const allElements = document.querySelectorAll('#smogLevel > div');
+            allElements.forEach(el => {
+                // 保留难度菜单显示
+                if (el.id !== 'difficultyMenu') {
+                    el.style.display = 'none';
+                }
+            });
+            
+            // 确保难度菜单显示
+            document.getElementById('difficultyMenu').style.display = 'block';
+            
+            // 绑定事件监听器
+            bindEventListeners();
+            
+            // 启动玩家移动处理
+            setInterval(movePlayer, 16); // 约60 FPS
+        }
+
+        // 初始化雾霾关元素
+        function initSmogLevel() {
+            const smogLevel = document.getElementById('smogLevel');
+            
+            // 根据难度设置血量上限
+            switch (gameState.difficulty) {
+                case '简单':
+                    gameState.playerHealth = 100;
+                    break;
+                case '困难':
+                    gameState.playerHealth = 80;
+                    break;
+                case '地狱':
+                    gameState.playerHealth = 60;
+                    break;
+            }
+            
+            // 重置游戏状态
+            gameState.smog.purifiersCollected = 0;
+            gameState.smog.placedPurifiers = 0;
+            gameState.smog.bullets = [];
+            gameState.smog.cores = [];
+            gameState.smog.purifiers = [];
+            gameState.smog.healthPacks = []; // 清空血包数组
+            gameState.smog.lastBulletTime = 0;
+            gameState.isPaused = false; // 重置暂停状态
+            gameState.startTime = Date.now(); // 设置游戏开始时间
+            
+            purifierCount.textContent = '0';
+            placedCount.textContent = '0';
+            playerHealth.textContent = gameState.playerHealth; // 更新血量显示
+            const maxHealth = getMaxHealth();
+            healthFill.style.width = '100%'; // 重置血量条
+            pauseMenu.style.display = 'none'; // 隐藏暂停菜单
+            gameOverMessage.style.display = 'none'; // 确保游戏结束界面隐藏
+            completionMessage.style.display = 'none'; // 确保通关界面隐藏
+            
+            // 设置玩家初始位置
+            gameState.playerPosition = { x: 50, y: 250 };
+            updatePlayerPosition();
+            
+            // 移除旧的元素
+            document.querySelectorAll('#smogLevel .bullet, #smogLevel .purifier, #smogLevel .placed-purifier, #smogLevel .smog-core, #smogLevel .health-pack').forEach(el => el.remove());
+            
+            // 根据难度设置核心数量
+            let coreCount = 5;
+            switch (gameState.difficulty) {
+                case '简单':
+                    coreCount = 5;
+                    break;
+                case '困难':
+                    coreCount = 10;
+                    break;
+                case '地狱':
+                    coreCount = 15;
+                    break;
+            }
+            
+            // 更新界面显示的总数
+            document.querySelector('.scene-header div:nth-child(2) span').textContent = '0';
+            document.querySelector('.scene-header div:nth-child(2)').innerHTML = '净化器收集: <span id="purifierCount">0</span>/' + coreCount;
+            document.querySelector('.scene-header div:nth-child(3)').innerHTML = '已放置: <span id="placedCount">0</span>/' + coreCount;
+            
+            // 创建雾霾核心，随机分布且相距较远
+            const cores = [];
+            for (let i = 0; i < coreCount; i++) {
+                let validPosition = false;
+                let x, y;
+                
+                // 确保核心之间有足够的距离
+                while (!validPosition) {
+                    x = 100 + Math.random() * (window.innerWidth - 200);
+                    y = 100 + Math.random() * (window.innerHeight - 200);
+                    
+                    validPosition = true;
+                    // 检查与其他核心的距离
+                    for (const core of cores) {
+                        const distance = Math.sqrt(Math.pow(core.x - x, 2) + Math.pow(core.y - y, 2));
+                        if (distance < (coreCount > 10 ? 150 : 200)) { // 地狱难度时减小间距
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                }
+                
+                const core = document.createElement('div');
+                core.className = 'smog-core';
+                core.style.left = x + 'px';
+                core.style.top = y + 'px';
+                core.dataset.coreId = i;
+                smogLevel.appendChild(core);
+                
+                cores.push({x, y});
+                gameState.smog.cores.push({
+                    element: core,
+                    x: x,
+                    y: y,
+                    active: true
+                });
+            }
+            
+            // 创建净化器，数量与核心数量相同
+            for (let i = 0; i < coreCount; i++) {
+                let validPosition = false;
+                let x, y;
+                
+                // 确保净化器不靠近核心
+                while (!validPosition) {
+                    x = 50 + Math.random() * (window.innerWidth - 100);
+                    y = 50 + Math.random() * (window.innerHeight - 100);
+                    
+                    validPosition = true;
+                    // 检查与所有核心的距离
+                    for (const core of cores) {
+                        const distance = Math.sqrt(Math.pow(core.x - x, 2) + Math.pow(core.y - y, 2));
+                        if (distance < 150) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                }
+                
+                const purifier = document.createElement('div');
+                purifier.className = 'purifier';
+                purifier.style.left = x + 'px';
+                purifier.style.top = y + 'px';
+                purifier.dataset.purifierId = i;
+                smogLevel.appendChild(purifier);
+                
+                gameState.smog.purifiers.push({
+                    element: purifier,
+                    x: x,
+                    y: y,
+                    collected: false
+                });
+            }
+            
+            // 设置核心放置区域（不再需要固定的区域）
+            coreArea.style.display = 'none';
+            
+            // 创建血包
+            createHealthPacks();
+        }
+        
+        // 创建血包
+        function createHealthPacks() {
+            // 清空现有的血包数组
+            gameState.smog.healthPacks = [];
+            
+            const smogLevel = document.getElementById('smogLevel');
+            const healthPackCount = 5; // 创建5个血包
+            
+            for (let i = 0; i < healthPackCount; i++) {
+                let validPosition = false;
+                let x, y;
+                
+                // 确保血包位置不与核心和净化器重叠
+                while (!validPosition) {
+                    x = 30 + Math.random() * (window.innerWidth - 60);
+                    y = 30 + Math.random() * (window.innerHeight - 60);
+                    
+                    validPosition = true;
+                    
+                    // 检查与所有核心的距离
+                    for (const core of gameState.smog.cores) {
+                        const distance = Math.sqrt(Math.pow(core.x - x, 2) + Math.pow(core.y - y, 2));
+                        if (distance < 150) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                    
+                    // 如果位置无效，继续检查下一个
+                    if (!validPosition) continue;
+                    
+                    // 检查与所有净化器的距离
+                    for (const purifier of gameState.smog.purifiers) {
+                        const distance = Math.sqrt(Math.pow(purifier.x - x, 2) + Math.pow(purifier.y - y, 2));
+                        if (distance < 100) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                }
+                
+                const healthPack = document.createElement('div');
+                healthPack.className = 'health-pack';
+                healthPack.style.left = x + 'px';
+                healthPack.style.top = y + 'px';
+                healthPack.dataset.healthPackId = i;
+                smogLevel.appendChild(healthPack);
+                
+                gameState.smog.healthPacks.push({
+                    element: healthPack,
+                    x: x,
+                    y: y,
+                    collected: false
+                });
+            }
+        }
+
+        // 绑定事件监听器
+        function bindEventListeners() {
+            console.log("绑定事件监听器");
+            // 键盘事件
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            
+            // 难度选择按钮
+            const difficultyButtons = document.querySelectorAll('#difficultyMenu button');
+            console.log("找到难度按钮数量:", difficultyButtons.length);
+            difficultyButtons.forEach(button => {
+                console.log("为按钮添加事件监听器:", button.dataset.difficulty);
+                button.addEventListener('click', function() {
+                    console.log("点击了难度按钮:", this.dataset.difficulty);
+                    selectDifficulty(this.dataset.difficulty);
+                });
+            });
+            
+            // 暂停按钮
+            if (pauseBtn) {
+                pauseBtn.addEventListener('click', togglePause);
+            }
+            
+            // 返回主菜单按钮
+            const backToMenuBtn = document.getElementById('backToMenuBtn');
+            if (backToMenuBtn) {
+                backToMenuBtn.addEventListener('click', () => {
+                    window.location.href = '../index.html';
+                });
+            }
+            
+            // 下一关按钮
+            const nextLevelBtn = document.getElementById('nextLevelBtn');
+            if (nextLevelBtn) {
+                nextLevelBtn.addEventListener('click', () => {
+                    // 这里可以跳转到下一关
+                    alert('恭喜完成雾霾关！下一关功能待开发。');
+                });
+            }
+            
+            // 重新开始按钮
+            const retryBtn = document.getElementById('retryBtn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', () => {
+                    // 重新开始游戏
+                    resetGame();
+                });
+            }
+            
+            // 关闭提示按钮
+            if (closeTips) {
+                closeTips.addEventListener('click', () => {
+                    gameTips.style.display = 'none';
+                });
+            }
+            
+            // 暂停菜单按钮
+            if (resumeBtn) {
+                resumeBtn.addEventListener('click', togglePause);
+            }
+            
+            if (restartBtn) {
+                restartBtn.addEventListener('click', () => {
+                    pauseMenu.style.display = 'none';
+                    resetGame();
+                });
+            }
+            
+            if (menuBtn) {
+                menuBtn.addEventListener('click', () => {
+                    window.location.href = '../index.html';
+                });
+            }
+        }
+
+        // 选择难度
+        function selectDifficulty(difficulty) {
+            gameState.difficulty = difficulty;
+            document.getElementById('difficultyMenu').style.display = 'none';
+            
+            // 显示游戏元素
+            const gameElements = document.querySelectorAll('#smogLevel > div');
+            gameElements.forEach(el => {
+                if (el.id !== 'difficultyMenu') {
+                    el.style.display = ''; // 恢复默认显示
+                }
+            });
+            
+            // 初始化游戏内容并开始游戏循环
+            initSmogLevel();
+            if (!gameLoop.running) {
+                gameLoop.running = true;
+                gameLoop();
+            }
+        }
+
+        // 重置游戏
+        function resetGame() {
+            // 隐藏所有游戏元素
+            const allElements = document.querySelectorAll('#smogLevel > div');
+            allElements.forEach(el => {
+                // 保留难度菜单显示
+                if (el.id !== 'difficultyMenu') {
+                    el.style.display = 'none';
+                }
+            });
+            
+            // 显示难度菜单
+            document.getElementById('difficultyMenu').style.display = 'block';
+            
+            // 重置游戏状态
+            gameState.playerPosition = { x: 50, y: 250 };
+            gameState.playerHealth = 100;
+            gameState.isPaused = false;
+            gameState.startTime = null;
+            gameState.smog.purifiersCollected = 0;
+            gameState.smog.placedPurifiers = 0;
+            gameState.smog.bullets = [];
+            gameState.smog.cores = [];
+            gameState.smog.purifiers = [];
+            gameState.smog.healthPacks = [];
+            gameState.smog.lastBulletTime = 0;
+            
+            // 清除所有动态元素
+            document.querySelectorAll('#smogLevel .bullet, #smogLevel .purifier, #smogLevel .placed-purifier, #smogLevel .smog-core, #smogLevel .health-pack').forEach(el => el.remove());
+            
+            // 重置UI显示
+            purifierCount.textContent = '0';
+            placedCount.textContent = '0';
+            playerHealth.textContent = '100';
+            healthFill.style.width = '100%';
+            completionMessage.style.display = 'none';
+            gameOverMessage.style.display = 'none';
+            pauseMenu.style.display = 'none';
+            
+            updatePlayerPosition();
+            
+            // 重置游戏循环状态
+            gameLoop.running = false;
+        }
+
+        // 切换暂停状态
+        function togglePause() {
+            gameState.isPaused = !gameState.isPaused;
+            if (gameState.isPaused) {
+                pauseMenu.style.display = 'block';
+            } else {
+                pauseMenu.style.display = 'none';
+            }
+        }
+
+        // 方向键状态
+        const keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            j: false // 添加J键状态
+        };
+
+        // 键盘按下事件处理
+        function handleKeyDown(e) {
+            switch(e.key.toLowerCase()) {
+                case 'w':
+                    keys.w = true;
+                    e.preventDefault();
+                    break;
+                case 'a':
+                    keys.a = true;
+                    e.preventDefault();
+                    break;
+                case 's':
+                    keys.s = true;
+                    e.preventDefault();
+                    break;
+                case 'd':
+                    keys.d = true;
+                    e.preventDefault();
+                    break;
+                case 'j':
+                    keys.j = true;
+                    placePurifier(); // 按J键放置净化器
+                    e.preventDefault();
+                    break;
+            }
+        }
+
+        // 键盘释放事件处理
+        function handleKeyUp(e) {
+            switch(e.key.toLowerCase()) {
+                case 'w':
+                    keys.w = false;
+                    break;
+                case 'a':
+                    keys.a = false;
+                    break;
+                case 's':
+                    keys.s = false;
+                    break;
+                case 'd':
+                    keys.d = false;
+                    break;
+                case 'j':
+                    keys.j = false;
+                    break;
+            }
+        }
+
+        // 移动玩家
+        function movePlayer() {
+            // 检查游戏是否暂停
+            if (gameState.isPaused) return;
+            
+            // 根据难度调整玩家速度
+            let currentSpeed = gameState.playerSpeed;
+            if (gameState.difficulty === '困难' || gameState.difficulty === '地狱') {
+                currentSpeed *= 0.8; // 困难和地狱模式速度降低20%
+            }
+            
+            let newX = gameState.playerPosition.x;
+            let newY = gameState.playerPosition.y;
+            
+            if (keys.w) newY -= currentSpeed;
+            if (keys.s) newY += currentSpeed;
+            if (keys.a) newX -= currentSpeed;
+            if (keys.d) newX += currentSpeed;
+            
+            // 恢复边界检查
+            if (newX >= 0 && newX <= window.innerWidth - 40 && newY >= 0 && newY <= window.innerHeight - 40) {
+                gameState.playerPosition.x = newX;
+                gameState.playerPosition.y = newY;
+                updatePlayerPosition();
+                
+                // 检查收集净化器
+                checkPurifierCollection();
+                
+                // 检查收集血包
+                checkHealthPackCollection();
+            }
+        }
+        
+        // 检查收集血包
+        function checkHealthPackCollection() {
+            const playerRect = {
+                left: gameState.playerPosition.x,
+                top: gameState.playerPosition.y,
+                right: gameState.playerPosition.x + 40,
+                bottom: gameState.playerPosition.y + 40
+            };
+            
+            for (let i = 0; i < gameState.smog.healthPacks.length; i++) {
+                const healthPack = gameState.smog.healthPacks[i];
+                if (!healthPack.collected) {
+                    const healthPackRect = {
+                        left: healthPack.x,
+                        top: healthPack.y,
+                        right: healthPack.x + 20,
+                        bottom: healthPack.y + 20
+                    };
+                    
+                    if (isColliding(playerRect, healthPackRect)) {
+                        // 标记为已收集
+                        healthPack.collected = true;
+                        
+                        // 从DOM中移除血包
+                        if (healthPack.element && healthPack.element.parentNode) {
+                            healthPack.element.parentNode.removeChild(healthPack.element);
+                        }
+                        
+                        // 恢复血量
+                        gameState.playerHealth = Math.min(getMaxHealth(), gameState.playerHealth + 25);
+                        
+                        // 更新血量显示
+                        playerHealth.textContent = gameState.playerHealth;
+                        
+                        // 更新血量条宽度
+                        const maxHealth = getMaxHealth();
+                        const healthPercentage = Math.max(0, (gameState.playerHealth / maxHealth) * 100);
+                        healthFill.style.width = healthPercentage + '%';
+                    }
+                }
+            }
+        }
+        
+        // 获取当前难度下的最大血量
+        function getMaxHealth() {
+            switch (gameState.difficulty) {
+                case '简单':
+                    return 100;
+                case '困难':
+                    return 80;
+                case '地狱':
+                    return 60;
+                default:
+                    return 100;
+            }
+        }
+        
+        // 播放爆炸音效
+        function playExplosionSound() {
+            try {
+                const audio = new Audio('爆炸.mp3');
+                audio.volume = 1.0; // 设置音量为最大（原来是0.5）
+                audio.play().catch(e => console.log("播放音效失败:", e));
+            } catch (e) {
+                console.log("无法播放音效:", e);
+                // 如果无法播放MP3文件，使用原来的音效作为备选
+                playSound();
+            }
+        }
+
+        // 播放音效
+        function playSound() {
+            // 创建音频上下文
+            try {
+                const context = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // 创建爆炸音效
+                const gainNode = context.createGain();
+                gainNode.gain.value = 0.3;
+                gainNode.connect(context.destination);
+                
+                // 创建低频振荡器（爆炸的低音部分）
+                const lowOsc = context.createOscillator();
+                lowOsc.type = 'sawtooth';
+                lowOsc.frequency.value = 80;
+                
+                // 创建高频振荡器（爆炸的高频部分）
+                const highOsc = context.createOscillator();
+                highOsc.type = 'square';
+                highOsc.frequency.value = 300;
+                
+                // 创建滤波器
+                const filter = context.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 1000;
+                
+                // 连接节点
+                lowOsc.connect(filter);
+                highOsc.connect(filter);
+                filter.connect(gainNode);
+                
+                // 启动振荡器
+                const now = context.currentTime;
+                lowOsc.start(now);
+                highOsc.start(now);
+                
+                // 快速降低音量以模拟爆炸效果
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                
+                // 停止振荡器
+                lowOsc.stop(now + 0.5);
+                highOsc.stop(now + 0.5);
+            } catch (e) {
+                console.log("无法播放音效:", e);
+            }
+        }
+
+        // 放置净化器
+        function placePurifier() {
+            // 只有当玩家收集了净化器时才能放置
+            if (gameState.smog.purifiersCollected > 0) {
+                const playerRect = {
+                    left: gameState.playerPosition.x,
+                    top: gameState.playerPosition.y,
+                    right: gameState.playerPosition.x + 40,
+                    bottom: gameState.playerPosition.y + 40
+                };
+                
+                // 检查是否靠近任何一个核心
+                for (let i = 0; i < gameState.smog.cores.length; i++) {
+                    const core = gameState.smog.cores[i];
+                    if (core.active) {
+                        const coreRect = {
+                            left: core.x - 40,
+                            top: core.y - 40,
+                            right: core.x + 140,
+                            bottom: core.y + 140
+                        };
+                        
+                        if (isColliding(playerRect, coreRect)) {
+                            // 放置净化器
+                            const purifier = document.createElement('div');
+                            purifier.className = 'placed-purifier';
+                            purifier.style.left = (core.x + 50 - 15) + 'px'; // 调整位置以居中放置在核心上
+                            purifier.style.top = (core.y + 50 - 15) + 'px';  // 调整位置以居中放置在核心上
+                            purifier.style.opacity = '0';
+                            purifier.style.transition = 'opacity 0.5s';
+                            document.getElementById('smogLevel').appendChild(purifier);
+                            
+                            // 立即显示净化器
+                            setTimeout(() => {
+                                if (purifier.parentNode) {
+                                    purifier.style.opacity = '1';
+                                }
+                            }, 10);
+                            
+                            // 减少玩家持有的净化器数量
+                            gameState.smog.purifiersCollected--;
+                            purifierCount.textContent = gameState.smog.purifiersCollected;
+                            
+                            // 500毫秒后移除净化器和核心
+                            setTimeout(() => {
+                                if (purifier.parentNode) {
+                                    purifier.parentNode.removeChild(purifier);
+                                }
+                                if (core.element.parentNode) {
+                                    core.element.parentNode.removeChild(core.element);
+                                }
+                                core.active = false;
+                                
+                                // 播放爆炸音效
+                                playExplosionSound();
+                                
+                                gameState.smog.placedPurifiers++;
+                                placedCount.textContent = gameState.smog.placedPurifiers;
+                                
+                                // 检查是否完成关卡
+                                let coreCount = 5;
+                                switch (gameState.difficulty) {
+                                    case '简单':
+                                        coreCount = 5;
+                                        break;
+                                    case '困难':
+                                        coreCount = 10;
+                                        break;
+                                    case '地狱':
+                                        coreCount = 15;
+                                        break;
+                                }
+                                
+                                if (gameState.smog.placedPurifiers >= coreCount) {
+                                    showCompletion();
+                                }
+                            }, 500);
+                            
+                            // 一次只放置一个净化器
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 更新玩家位置
+        function updatePlayerPosition() {
+            smogPlayer.style.left = gameState.playerPosition.x + 'px';
+            smogPlayer.style.top = gameState.playerPosition.y + 'px';
+        }
+
+        // 检查净化器收集
+        function checkPurifierCollection() {
+            // 只有当玩家没有收集净化器时才能收集新的
+            if (gameState.smog.purifiersCollected === 0) {
+                const playerRect = {
+                    left: gameState.playerPosition.x,
+                    top: gameState.playerPosition.y,
+                    right: gameState.playerPosition.x + 40,
+                    bottom: gameState.playerPosition.y + 40
+                };
+                
+                for (let i = 0; i < gameState.smog.purifiers.length; i++) {
+                    const purifier = gameState.smog.purifiers[i];
+                    if (!purifier.collected) {
+                        const purifierRect = {
+                            left: purifier.x,
+                            top: purifier.y,
+                            right: purifier.x + 30,
+                            bottom: purifier.y + 30
+                        };
+                        
+                        if (isColliding(playerRect, purifierRect)) {
+                            purifier.collected = true;
+                            // 从DOM中移除净化器元素，而不仅仅是隐藏
+                            if (purifier.element && purifier.element.parentNode) {
+                                purifier.element.parentNode.removeChild(purifier.element);
+                            }
+                            gameState.smog.purifiersCollected++;
+                            purifierCount.textContent = gameState.smog.purifiersCollected;
+                            
+                            // 一次只收集一个净化器
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 检查净化器放置
+        function checkPurifierPlacement() {
+            if (gameState.smog.purifiersCollected > gameState.smog.placedPurifiers) {
+                const playerRect = {
+                    left: gameState.playerPosition.x,
+                    top: gameState.playerPosition.y,
+                    right: gameState.playerPosition.x + 40,
+                    bottom: gameState.playerPosition.y + 40
+                };
+                
+                // 检查是否靠近任何一个核心
+                let placed = false;
+                for (const core of gameState.smog.cores) {
+                    if (placed) break; // 如果已经放置了，就跳出循环
+                    
+                    const coreRect = {
+                        left: core.x - 40,
+                        top: core.y - 40,
+                        right: core.x + 120,
+                        bottom: core.y + 120
+                    };
+                    
+                    if (isColliding(playerRect, coreRect)) {
+                        // 放置净化器
+                        gameState.smog.placedPurifiers++;
+                        placedCount.textContent = gameState.smog.placedPurifiers;
+                        
+                        // 创建放置的净化器视觉效果
+                        const placedPurifier = document.createElement('div');
+                        placedPurifier.className = 'placed-purifier';
+                        placedPurifier.style.left = (core.x + 50 - 15) + 'px'; // 调整位置以居中放置在核心上
+                        placedPurifier.style.top = (core.y + 50 - 15) + 'px';  // 调整位置以居中放置在核心上
+                        document.getElementById('smogLevel').appendChild(placedPurifier);
+                        
+                        // 减少已收集的净化器数量
+                        gameState.smog.purifiersCollected--;
+                        purifierCount.textContent = gameState.smog.purifiersCollected;
+                        
+                        // 检查是否完成关卡
+                        let coreCount = 5;
+                        switch (gameState.difficulty) {
+                            case '简单':
+                                coreCount = 5;
+                                break;
+                            case '困难':
+                                coreCount = 10;
+                                break;
+                            case '地狱':
+                                coreCount = 15;
+                                break;
+                        }
+                        
+                        if (gameState.smog.placedPurifiers >= coreCount) {
+                            showCompletion();
+                        }
+                        
+                        // 标记为已放置，避免一次放置多个
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        // 碰撞检测
+        function isColliding(rect1, rect2) {
+            return !(rect1.right < rect2.left || 
+                     rect1.left > rect2.right || 
+                     rect1.bottom < rect2.top || 
+                     rect1.top > rect2.bottom);
+        }
+
+        // 显示完成信息
+        function showCompletion() {
+            // 暂停游戏计时器
+            gameState.isPaused = true;
+            
+            // 尝试切换背景为好天气图片
+            const gameContainer = document.getElementById('gameContainer');
+            
+            // 创建新背景图片以测试是否能加载
+            const img = new Image();
+            img.onload = function() {
+                // 图片加载成功，使用新背景
+                gameContainer.style.backgroundImage = 'url("好天气.png")';
+                gameContainer.style.transition = 'background-image 1s ease-in-out';
+            };
+            img.onerror = function() {
+                // 图片加载失败，保持原背景
+                console.log("无法加载好天气背景图片，使用原背景");
+            };
+            img.src = '好天气.png';
+            
+            let message = '';
+            switch (gameState.difficulty) {
+                case '简单':
+                    message = '恭喜完成简单模式!';
+                    break;
+                case '困难':
+                    message = '恭喜完成困难模式!';
+                    break;
+                case '地狱':
+                    message = '恭喜完成地狱模式!你真是环保勇士!';
+                    break;
+            }
+            
+            document.querySelector("#completionMessage h2").textContent = message;
+            completionMessage.style.display = 'block';
+        }
+
+        // 如果无法显示好天气背景，则使用原背景
+        function showCompletionFallback() {
+            let message = '';
+            switch (gameState.difficulty) {
+                case '简单':
+                    message = '恭喜完成简单模式!';
+                    break;
+                case '困难':
+                    message = '恭喜完成困难模式!';
+                    break;
+                case '地狱':
+                    message = '恭喜完成地狱模式!你真是环保勇士!';
+                    break;
+            }
+            
+            document.querySelector("#completionMessage h2").textContent = message;
+            completionMessage.style.display = 'block';
+        }
+
+        // 游戏循环
+        function gameLoop() {
+            // 检查游戏是否暂停或者未开始（没有选择难度）
+            if (!gameState.isPaused && gameState.startTime !== null) {
+                // 更新时间显示
+                if (timeLeft) {
+                    const elapsed = Date.now() - gameState.startTime;
+                    const remaining = Math.max(0, gameState.timeLimit - elapsed);
+                    const minutes = Math.floor(remaining / 60000);
+                    const seconds = Math.floor((remaining % 60000) / 1000);
+                    timeLeft.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    // 检查时间限制
+                    if (elapsed > gameState.timeLimit) {
+                        // 时间到，游戏失败
+                        gameOver("时间到！未能在规定时间内清除雾霾。");
+                        return;
+                    }
+                }
+                
+                // 生成子弹 (降低生成频率，从300ms增加到800ms)
+                if (Date.now() - gameState.smog.lastBulletTime > 800) {
+                    generateBullets();
+                    gameState.smog.lastBulletTime = Date.now();
+                }
+                
+                // 更新子弹位置
+                updateBullets();
+                
+                // 检查玩家与子弹碰撞
+                checkPlayerBulletCollision();
+                
+                // 检查玩家与血包碰撞（已在movePlayer中处理，此处不需要重复）
+            }
+            
+            if (gameLoop.running) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // 生成子弹
+        function generateBullets() {
+            gameState.smog.cores.forEach(core => {
+                if (core.active) {
+                    // 为每个活跃的核心生成子弹（增加生成数量，80%概率生成）
+                    if (Math.random() < 0.8) {
+                        const bullet = document.createElement('div');
+                        bullet.className = 'bullet';
+                        bullet.style.left = (core.x + 50 - 5) + 'px'; // 调整位置以适应新的100px核心尺寸
+                        bullet.style.top = (core.y + 50 - 5) + 'px';  // 调整位置以适应新的100px核心尺寸
+                        document.getElementById('smogLevel').appendChild(bullet);
+                        
+                        // 随机方向移动向量，进一步降低速度
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = (0.5 + Math.random() * 0.5) * 0.5; // 进一步减慢速度（原来是1-2，现在是0.5-1）
+                        
+                        gameState.smog.bullets.push({
+                            element: bullet,
+                            x: core.x + 50 - 5,
+                            y: core.y + 50 - 5,
+                            velocityX: Math.cos(angle) * speed,
+                            velocityY: Math.sin(angle) * speed
+                        });
+                    }
+                }
+            });
+        }
+
+        // 更新子弹位置
+        function updateBullets() {
+            for (let i = gameState.smog.bullets.length - 1; i >= 0; i--) {
+                const bullet = gameState.smog.bullets[i];
+                
+                bullet.x += bullet.velocityX;
+                bullet.y += bullet.velocityY;
+                
+                bullet.element.style.left = bullet.x + 'px';
+                bullet.element.style.top = bullet.y + 'px';
+                
+                // 移除超出边界的子弹
+                if (bullet.x < -10 || bullet.x > window.innerWidth + 10 || 
+                    bullet.y < -10 || bullet.y > window.innerHeight + 10) {
+                    bullet.element.remove();
+                    gameState.smog.bullets.splice(i, 1);
+                }
+            }
+        }
+
+        // 检查玩家与子弹碰撞
+        function checkPlayerBulletCollision() {
+            const playerRect = {
+                left: gameState.playerPosition.x + 5,
+                top: gameState.playerPosition.y + 5,
+                right: gameState.playerPosition.x + 35,
+                bottom: gameState.playerPosition.y + 35
+            };
+
+            for (let i = gameState.smog.bullets.length - 1; i >= 0; i--) {
+                const bullet = gameState.smog.bullets[i];
+                const bulletRect = {
+                    left: bullet.x,
+                    top: bullet.y,
+                    right: bullet.x + 10,
+                    bottom: bullet.y + 10
+                };
+
+                if (isColliding(playerRect, bulletRect)) {
+                    // 移除子弹元素
+                    if (bullet.element && bullet.element.parentNode) {
+                        bullet.element.parentNode.removeChild(bullet.element);
+                    }
+                    
+                    // 从数组中移除子弹
+                    gameState.smog.bullets.splice(i, 1);
+                    
+                    // 扣血
+                    gameState.playerHealth -= 5; // 扣5点血量
+                    
+                    // 更新血量显示
+                    playerHealth.textContent = gameState.playerHealth;
+                    
+                    // 根据难度获取最大血量值
+                    let maxHealth = 100;
+                    switch (gameState.difficulty) {
+                        case '简单':
+                            maxHealth = 100;
+                            break;
+                        case '困难':
+                            maxHealth = 80;
+                            break;
+                        case '地狱':
+                            maxHealth = 60;
+                            break;
+                    }
+                    
+                    // 更新血量条宽度
+                    const healthPercentage = Math.max(0, (gameState.playerHealth / maxHealth) * 100);
+                    healthFill.style.width = healthPercentage + '%';
+                    
+                    // 检查玩家是否死亡
+                    if (gameState.playerHealth <= 0) {
+                        // 只有当玩家未完成所有目标时才游戏结束
+                        let coreCount = 5;
+                        switch (gameState.difficulty) {
+                            case '简单':
+                                coreCount = 5;
+                                break;
+                            case '困难':
+                                coreCount = 10;
+                                break;
+                            case '地狱':
+                                coreCount = 15;
+                                break;
+                        }
+                        
+                        // 如果玩家已经放置了所有净化器，则不游戏结束
+                        if (gameState.smog.placedPurifiers < coreCount) {
+                            gameOver("您的血量已耗尽，未能清除雾霾。");
+                        }
+                    }
+                }
+            }
+        }
+
+        // 游戏结束
+        function gameOver(message = "您的血量已耗尽，未能清除雾霾。") {
+            // 检查游戏是否已经结束，避免重复触发
+            if (gameOverMessage.style.display === 'block' || completionMessage.style.display === 'block') {
+                return;
+            }
+            
+            // 设置游戏为暂停状态，防止玩家继续操作
+            gameState.isPaused = true;
+            
+            document.querySelector("#gameOverMessage p").textContent = message;
+            gameOverMessage.style.display = 'block';
+        }
+
+
+        // 页面加载完成后初始化游戏
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
